@@ -1,5 +1,6 @@
 <?php
-/**        
+
+/**
  *  abstract class printerbase: store level of output desired and 
  *  invoke print function when needed.
  * 
@@ -8,31 +9,36 @@
  *  to make it easier to understand what levels exist.
  *
  */
+
 /**
  * class printerbase - abstract class for feedback to caller
  * 
  * @package printerbase
  *
  */
+abstract class printerbase {
 
-abstract class printerbase
-{
-    protected $printLevel;
-    
-    public function __construct($level = 1)
-    {
-	$this->printLevel = $level;
-    }
+	protected $printLevel;
 
-    public function write($string,$level = 1)
-    {
-	if ($level <= $this->printLevel)
-	{
-	    $this->doWrite($string);
+	public function __construct($level = 1) {
+		$this->printLevel = $level;
 	}
-    }
-    
-    abstract public function doWrite($string);
+
+	public function write($string, $level = 1) {
+		if ($level <= $this->printLevel) {
+			$this->doWrite($string);
+		}
+	}
+
+	abstract public function doWrite($string);
+
+	public function ask($question) {
+		$this->write($question, 0);
+		$answer = trim(fgets(STDIN));
+
+		return $answer;
+	}
+
 }
 
 ?>
