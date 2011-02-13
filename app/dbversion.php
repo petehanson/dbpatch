@@ -31,7 +31,7 @@ class dbversion {
 	protected $datapath;
 	//protected $dryRun;
 	protected $versionsToProcess;
-	protected $versionsToSkip;
+	protected $skip_patches;
 	protected $versionsToRecord;
 	/*	 * #@- */
 
@@ -61,7 +61,7 @@ class dbversion {
 		 */
 
 		$this->versionsToProcess = null;
-		$this->versionsToSkip = null;
+		$this->skip_patches = array();
 		$this->versionsToRecord = null;
 
 		$this->db = new database(config::$dbHost, config::$dbName,
@@ -93,6 +93,89 @@ class dbversion {
 	 *
 	 */
 	public function apply_patches() {
+
+		$return_result = true;
+
+		// get list of applied patches from db
+		$applied_patches = $this->db->get_applied_patches();
+		print_r($applied_patches);
+
+		// get list of patches on the file system
+		$schema_patches = $this->get_patch_files($this->schemapath);
+		$data_patches = $this->get_patch_files($this->datapath);
+
+		// determine outstanding patches
+		$needed_schema_patches = array_diff($schema_patches,$applied_patches);
+		$needed_data_patches = array_diff($data_patches,$applied_patches);
+
+		// filter out any specified in skip
+		$needed_schema_patches = array_diff($needed_schema_patches,$this->skip_patches);
+		$needed_data_patches = array_diff($needed_data_patches,$this->skip_patches);
+
+		if (count($this->skip_patches) > 0) {
+			$this->printer->write("");
+			$this->printer->write("Schema patches that will be skipped:");
+			foreach ($this->skip_patches as $patch) {
+				$this->printer->write("\t" . $patch);
+			}
+		}
+
+
+		$this->printer->write("");
+		$this->printer->write("Schema patches that will be applied:");
+		foreach ($needed_schema_patches as $patch) {
+			$this->printer->write("\t" . $patch);
+		}
+
+		$this->printer->write("");
+		$this->printer->write("Data patches that will be applied:");
+		foreach ($needed_data_patches as $patch) {
+			$this->printer->write("\t" . $patch);
+		}
+
+		// sort patches into correct order by timestamp prefix (filename)
+		sort($needed_schema_patches);
+		sort($needed_data_patches);
+
+
+		$this->printer->write("");
+		$this->printer->write("Applying patches:");
+		// on each patch, apply it to the DB
+		foreach ($needed_data_patches as $patch) {
+			// record the patch data into dbversion
+			$fullpath = realpath($this->datapath . "/" . $patch);
+
+			$sql_lines = file($fullpath);
+
+			foreach($sql_lines as $sql_statement) {
+				$result = $this->db->execute($sql_statement);
+
+			}
+
+			if ($this->db->has_error()) {
+				$this->printer->write("Error: {$fullpath}");
+				$return_result = false;
+				break;
+			} else {
+				$this->printer->write("Success: {$fullpath}");
+			}
+		}
+
+
+		return $return_result;
+	}
+
+
+	protected function get_patch_files($path) {
+		$files = array();
+		$dir = new DirectoryIterator($path);
+		foreach ($dir as $item) {
+			if (!$item->isDot()) {
+				$files[] = $item->getFilename();
+			}
+		}
+
+		return $files;
 	}
 
 	/**
@@ -124,24 +207,40 @@ class dbversion {
 	 *  function add_patches:  Applies specific patches to the database
 	 *
 	 */
-	public function add_patches($versionIDs) {
-		if (!is_array($versionIDs))
-			$versionIDs = array($versionIDs);
-		if ($this->versionsToProcess === null)
-			$this->versionsToProcess = array();
-		$this->versionsToProcess = array_merge($this->versionsToProcess, $versionIDs);
+	public function add_patches($patches) {
+
+
+		$this->versionsToProcess = array_merge($this->versionsToProcess, $patches);
 	}
 
 	/**
 	 *  function skip_patches:  patches that should be skipped when patching
 	 *
 	 */
-	public function skip_patches($versionIDs) {
-		if (!is_array($versionIDs))
-			$versionIDs = array($versionIDs);
-		if ($this->versionsToSkip === null)
-			$this->versionsToSkip = array();
-		$this->versionsToSkip = array_merge($this->versionsToSkip, $versionIDs);
+	public function skip_patches($patches) {
+
+		// set up patches as an array if it isn't one
+		if (!is_array($patches)) $patches = array($patches);
+
+		// loop through each skip patch
+		$temp_list = array();
+		foreach($patches as $patch) {
+			// determine if it has a path in the patch specification
+			$slash_position = strrpos($patch,"/");
+			// if we do, we process out the path, getting just the filename
+			if ($slash_position !== false) {
+				$length = strlen($patch) - $slash_position;
+				$temp_list[] = substr($patch,$slash_position + 1,$length);
+			} else {
+				// otherwise we treat it just as a patch name
+				$temp_list[] = $patch;
+			}
+		}
+
+		// get rid of duplicates
+		$patches = array_unique($temp_list);
+
+		$this->skip_patches = array_merge($this->skip_patches, $patches);
 	}
 
 	/**
@@ -243,20 +342,20 @@ class dbversion {
 	 * supposed to be processed.
 	 */
 	protected function performProcessOnVersion($versionID) {
-		if (is_array($this->versionsToProcess) && is_array($this->versionsToSkip)) {
-			if (in_array($versionID, $this->versionsToProcess) && !in_array($versionID, $this->versionsToSkip)) {
+		if (is_array($this->versionsToProcess) && is_array($this->skip_patches)) {
+			if (in_array($versionID, $this->versionsToProcess) && !in_array($versionID, $this->skip_patches)) {
 				return true;
 			} else {
 				return false;
 			}
-		} elseif (is_array($this->versionsToProcess) && $this->versionsToSkip === null) {
+		} elseif (is_array($this->versionsToProcess) && $this->skip_patches === null) {
 			if (in_array($versionID, $this->versionsToProcess)) {
 				return true;
 			} else {
 				return false;
 			}
-		} elseif ($this->versionsToProcess === null && is_array($this->versionsToSkip)) {
-			if (in_array($versionID, $this->versionsToSkip)) {
+		} elseif ($this->versionsToProcess === null && is_array($this->skip_patches)) {
+			if (in_array($versionID, $this->skip_patches)) {
 				return false;
 			} else {
 				return true;

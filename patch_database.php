@@ -188,6 +188,7 @@ try {
 				$app->skip_patches($skipList);
 			}
 
+			$app->apply_patches();
 
 			break;
 
