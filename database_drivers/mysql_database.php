@@ -217,7 +217,8 @@ class database implements driverinterface {
 	 *
 	 */
 	public function execute($sql) {
-		$this->printer->write("executing statement: " . $sql, 2);
+		$this->printer->write("executing statement:", 2);
+		$this->printer->write($sql, 2);
 		$result = mysql_query($sql);
 		if ($result === false) {
 			$this->hasError = true;

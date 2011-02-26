@@ -55,9 +55,9 @@ class dbversion {
 		$this->datapath = realpath($base_folder . "/" . config::$datapath);
 
 		/*
-		$printer->write("Base Path: {$this->basepath}");
-		$printer->write("Schema Path: {$this->schemapath}");
-		$printer->write("Data Path: {$this->datapath}");
+		  $printer->write("Base Path: {$this->basepath}");
+		  $printer->write("Schema Path: {$this->schemapath}");
+		  $printer->write("Data Path: {$this->datapath}");
 		 */
 
 		$this->versionsToProcess = null;
@@ -78,7 +78,6 @@ class dbversion {
 	public function __destruct() {
 		$this->db->close();
 	}
-
 
 	/**
 	 *  list_patches function: determines what patches need to be applied to the current working copy database
@@ -105,12 +104,12 @@ class dbversion {
 		$data_patches = $this->get_patch_files($this->datapath);
 
 		// determine outstanding patches
-		$needed_schema_patches = array_diff($schema_patches,$applied_patches);
-		$needed_data_patches = array_diff($data_patches,$applied_patches);
+		$needed_schema_patches = array_diff($schema_patches, $applied_patches);
+		$needed_data_patches = array_diff($data_patches, $applied_patches);
 
 		// filter out any specified in skip
-		$needed_schema_patches = array_diff($needed_schema_patches,$this->skip_patches);
-		$needed_data_patches = array_diff($needed_data_patches,$this->skip_patches);
+		$needed_schema_patches = array_diff($needed_schema_patches, $this->skip_patches);
+		$needed_data_patches = array_diff($needed_data_patches, $this->skip_patches);
 
 		if (count($this->skip_patches) > 0) {
 			$this->printer->write("");
@@ -138,26 +137,31 @@ class dbversion {
 		sort($needed_data_patches);
 
 
+
+
 		$this->printer->write("");
 		$this->printer->write("Applying patches:");
 		// on each patch, apply it to the DB
-		foreach ($needed_data_patches as $patch) {
-			// record the patch data into dbversion
-			$fullpath = realpath($this->datapath . "/" . $patch);
+		foreach (array("schemapath" => $needed_schema_patches, "datapath" => $needed_data_patches) as $pathname => $needed_patches) {
 
-			$sql_lines = file($fullpath);
+			foreach ($needed_patches as $patch) {
+				// record the patch data into dbversion
+				$fullpath = realpath($this->$pathname . "/" . $patch);
 
-			foreach($sql_lines as $sql_statement) {
-				$result = $this->db->execute($sql_statement);
+				//$sql_lines = file($fullpath);
+				$sql_lines = file_get_contents($fullpath);
 
-			}
+				//foreach ($sql_lines as $sql_statement) {
+					$result = $this->db->execute($sql_lines);
+				//}
 
-			if ($this->db->has_error()) {
-				$this->printer->write("Error: {$fullpath}");
-				$return_result = false;
-				break;
-			} else {
-				$this->printer->write("Success: {$fullpath}");
+				if ($this->db->has_error()) {
+					$this->printer->write("Error: {$fullpath}");
+					$return_result = false;
+					break;
+				} else {
+					$this->printer->write("Success: {$fullpath}");
+				}
 			}
 		}
 
@@ -165,12 +169,11 @@ class dbversion {
 		return $return_result;
 	}
 
-
 	protected function get_patch_files($path) {
 		$files = array();
 		$dir = new DirectoryIterator($path);
 		foreach ($dir as $item) {
-			if (!$item->isDot()) {
+			if (!$item->isDot() && preg_match("/^\d{8}_\d{6}/",$item->getFilename())) {
 				$files[] = $item->getFilename();
 			}
 		}
@@ -220,17 +223,18 @@ class dbversion {
 	public function skip_patches($patches) {
 
 		// set up patches as an array if it isn't one
-		if (!is_array($patches)) $patches = array($patches);
+		if (!is_array($patches))
+			$patches = array($patches);
 
 		// loop through each skip patch
 		$temp_list = array();
-		foreach($patches as $patch) {
+		foreach ($patches as $patch) {
 			// determine if it has a path in the patch specification
-			$slash_position = strrpos($patch,"/");
+			$slash_position = strrpos($patch, "/");
 			// if we do, we process out the path, getting just the filename
 			if ($slash_position !== false) {
 				$length = strlen($patch) - $slash_position;
-				$temp_list[] = substr($patch,$slash_position + 1,$length);
+				$temp_list[] = substr($patch, $slash_position + 1, $length);
 			} else {
 				// otherwise we treat it just as a patch name
 				$temp_list[] = $patch;
@@ -248,7 +252,6 @@ class dbversion {
 	 *
 	 * @param string $patch_type
 	 */
-
 	public function create_patch($patch_type) {
 
 		switch ($patch_type) {
@@ -260,23 +263,22 @@ class dbversion {
 				break;
 			default:
 				throw new exception("An invalid patch type was provided.");
-
 		}
 
 		$timestamp_prefix = date("Ymd_His");
 
-		$this->printer->write("Setting patch prefix: {$timestamp_prefix}",2);
+		$this->printer->write("Setting patch prefix: {$timestamp_prefix}", 2);
 
 		$answer = $this->printer->ask("Provide a description for the patch:");
 
 		// normalize answer string, only using alphanum
-		$normalized_answer = preg_replace("/\s/","_",$answer);
-		$normalized_answer = preg_replace("/[^\w]/","",$normalized_answer);
+		$normalized_answer = preg_replace("/\s/", "_", $answer);
+		$normalized_answer = preg_replace("/[^\w]/", "", $normalized_answer);
 
 		// set the file name
 		$patch_file_name = "{$timestamp_prefix}_{$normalized_answer}.sql";
 
-		$this->printer->write("Patch file name: {$patch_file_name}",2);
+		$this->printer->write("Patch file name: {$patch_file_name}", 2);
 
 		// lets create the file
 		$fullpath = $path . "/" . $patch_file_name;
@@ -293,13 +295,13 @@ class dbversion {
 	 *
 	 */
 	/*
-	public function recordVersions($versionIDs) {
-		if (!is_array($versionIDs))
-			$versionIDs = array($versionIDs);
-		if ($this->versionsToRecord === null)
-			$this->versionsToRecord = array();
-		$this->versionsToRecord = array_merge($this->versionsToRecord, $versionIDs);
-	}
+	  public function recordVersions($versionIDs) {
+	  if (!is_array($versionIDs))
+	  $versionIDs = array($versionIDs);
+	  if ($this->versionsToRecord === null)
+	  $this->versionsToRecord = array();
+	  $this->versionsToRecord = array_merge($this->versionsToRecord, $versionIDs);
+	  }
 	 *
 	 */
 
