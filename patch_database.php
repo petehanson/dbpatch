@@ -200,9 +200,13 @@ try {
 			break;
 
 		case "add":
+			$recordList = explode(",", $action_value);
+			$app->add_patches($recordList);
 			break;
 
 		case "record":
+			$recordList = explode(",", $action_value);
+			$app->record_patches($recordList);
 			break;
 
 		case "help":
@@ -248,10 +252,11 @@ function displayHelp() {
 	global $version;
 
 	echo "Help on the database patching script. Version: {$version}\n";
-	echo "Usage: patch_database.php [options] schema_patch_file.xml\n";
+	echo "Usage: patch_database.php [options] \n";
 	echo "\n";
 	echo "Available Options:\n";
 	echo "This help screen:\t\t-h or --help\n";
+	echo "Executes the patch process:\t-p or --patch\n";
 	echo "Verbose Output:\t\t\t-v or --verbose\n";
 	echo "No Output:\t\t\t-q or --quiet\n";
 	echo "Do a dry run:\t\t\t-d or --dryrun\n";
@@ -265,6 +270,10 @@ function displayHelp() {
 	echo "multiple version IDs by using a comma seperated list. ";
 	echo "Just make sure there are no spaces between the commas ";
 	echo "and values.\n";
+	echo "The specified patch files will be searched in the sql/data and sql/schema. ";
+	echo "If one or more of the specified files is not found, the process will be ";
+	echo "aborted and no patch will be applied. If one or more of the specified files is ";
+	echo "found in both directories, the process will be aborted and no patch will be applied.\n";
 	echo "Example: --add=1_trunk_person,2_trunk_person  or  ";
 	echo "-a1_trunk_person,2_trunk_person\n";
 	echo "\n";
@@ -272,6 +281,9 @@ function displayHelp() {
 	echo "list of version IDs. You can specify multiple version IDs ";
 	echo "by using a comma seperated list. Just make sure there ";
 	echo "are no spaces between the commas and values.\n";
+	echo "The specified patch files will be searched in the sql/data and sql/schema. ";
+	echo "If one or more of the specified files is ";
+	echo "found in both directories, the process will be aborted and no patch will be applied.\n";
 	echo "Example: --skip=1_trunk_person,2_trunk_person  or  ";
 	echo "-s1_trunk_person,2_trunk_person\n";
 	echo "\n";

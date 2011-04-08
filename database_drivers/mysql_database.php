@@ -30,7 +30,8 @@ class database implements driverinterface {
 	protected $hasError;
 	protected $inTransaction;
 	protected $ddl_rollback;
-
+	protected $is_new;
+	
 	/**
 	 *   __construct function, describes environment and sets up connection.
 	 *
@@ -45,16 +46,19 @@ class database implements driverinterface {
 
 		$this->hasError = false;
 		$this->inTransaction = false;
+		$this->applyBase = false;
 
 		$this->connection =
 			mysql_connect($this->host, $this->username, $this->password);
 
 		if ($this->connection === false)
 			throw new exception("Failed to connect to the database");
-		if (mysql_select_db($this->dbName) === false)
-			throw new
-			exception("Failed to connect to the database {$this->dbName}");
-
+		if (mysql_select_db($this->dbName) === false) {
+			$this->createDatabase();
+			if (mysql_select_db($this->dbName) === false) {
+				throw new exception("Failed to connect to the database {$this->dbName}");	
+			}
+		}
 	}
 
 	/**
@@ -167,9 +171,10 @@ class database implements driverinterface {
 		$sql = "select * from dbversion";
 
 		$results = $this->execute($sql);
-
-		while ($row = mysql_fetch_assoc($results)) {
-			$return_array[] = $row['applied_patch'];
+		if (!empty($results)) {
+			while ($row = mysql_fetch_assoc($results)) {
+				$return_array[] = $row['applied_patch'];
+			}
 		}
 
 		return $return_array;
@@ -199,10 +204,9 @@ class database implements driverinterface {
 	 *  info into the dbversion table.
 	 *
 	 */
-	public function insertVersion($id, $description, $date, $person) {
-		$date = date("Y-m-d", strtotime($date));
-		$versionInsertSQL = "INSERT INTO dbversion VALUES ('%s','%s','%s','%s')";
-		$sql = sprintf($versionInsertSQL, mysql_escape_string($id), mysql_escape_string($description), mysql_escape_string($date), mysql_escape_string($person));
+	public function insertVersion($id, $date) {
+		$versionInsertSQL = "INSERT INTO dbversion VALUES ('%s','%s')";
+		$sql = sprintf($versionInsertSQL, mysql_escape_string($id), mysql_escape_string($date));
 
 		return $this->execute($sql);
 	}
@@ -265,6 +269,49 @@ class database implements driverinterface {
 	public function rollBackDDL() {
 		foreach ($this->ddl_rollback as $sql_ddl) {
 			$this->execute($sql_ddl);
+		}
+	}
+	
+	/**
+	 * function isNewDB: Tells if the base schema should be applied. Like is ten case when the datbase is created
+	 *
+	 */
+	public function isNewDB() {
+		return ($this->is_new) ? true : false;
+	}
+	
+	public function getHost () {
+		return $this->host;
+	}
+	
+	public function getUser () {
+		return $this->username;
+	}
+	
+	public function getPassword () {
+		return $this->password;
+	}
+	
+	public function getDBName () {
+		return $this->dbName;
+	}
+	/**
+	 * function createDatabase: Attempts to creates the datbase if it does not exists
+	 */
+	private function createDatabase () {
+		$answer = $this->printer->ask("Database {$this->dbName} does not exist. Want to create the database right now? (y/n)");
+		if ($answer == 'y') {
+			if (mysql_query("CREATE DATABASE {$this->dbName}", $this->connection)) {
+				$this->printer->write("Database created");
+				$this->is_new = true;
+			} else {
+				throw new exception("Error creating database: " . mysql_error());
+			}
+		} elseif ($answer == 'n') {
+			$this->printer->write("The database was not created. Process aborted.");
+			die;
+		} else { 
+			$this->createDatabase();
 		}
 	}
 

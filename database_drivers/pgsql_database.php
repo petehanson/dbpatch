@@ -144,13 +144,12 @@ class database implements driverinterface
 	}
     }
 
-    public function insertVersion($id,$description,$date,$person)
+    public function insertVersion($id,$date)
     {
-	$date = date("Y-m-d",strtotime($date));
-	$versionInsertSQL = "INSERT INTO dbversion VALUES ('%s','%s','%s','%s')";
-	$sql = sprintf($versionInsertSQL,pg_escape_string($id),pg_escape_string($description),pg_escape_string($date),pg_escape_string($person));
+    	$versionInsertSQL = "INSERT INTO dbversion VALUES ('%s','%s')";
+    	$sql = sprintf($versionInsertSQL,pg_escape_string($id),pg_escape_string($date));
 
-	return $this->execute($sql);
+    	return $this->execute($sql);
     }
 
     public function execute($sql)
