@@ -105,7 +105,9 @@ class dbversion {
 		if (!empty($applied_patches)) {
 			$this->printer->write("");
 			$this->printer->write("Patches already applied and will be skipped:");
-			print_r($applied_patches);
+			foreach ($applied_patches as $patch) {
+				$this->printer->write("\t" . $patch);
+			}
 		}
 
 		// get list of patches on the file system
@@ -169,11 +171,19 @@ class dbversion {
 					// record the patch data into dbversion
 					$fullpath = realpath($this->$pathname . "/" . $patch);
 	
-					$queries = $this->getFileQueries($fullpath);
+					$queries = $this->get_queries_from_file($fullpath);
+					print_r($queries);
+					//continue;
 					foreach ($queries as $sql) {
 						$sql = trim($sql);
+
+						// if somehow we have a blank statement, then we just go to the next
+						if (empty($sql)) continue;
+
+						/*
 						if (in_array($sql[0], $this->commentCharcters) || empty($sql))
 							continue;
+						 */
 						$result = $this->db->execute($sql);
 					}
 					if ($this->db->has_error()) {
@@ -183,7 +193,7 @@ class dbversion {
 					} else {
 						$this->printer->write("Success: {$fullpath}");
 						// save patch to dbversion
-						//$this->record_patches($patch);
+						$this->record_patches($patch);
 					}
 				}
 			}
@@ -234,6 +244,7 @@ class dbversion {
 			$this->printer->write("Inserting Version ID: " . (string) $version, 1);
 		}
 
+		/*
 		if ($this->db->doesTransactions()) {
 			if ($this->dryRun === true)
 				$this->db->failTransaction();
@@ -242,6 +253,10 @@ class dbversion {
 		else {
 			return true;
 		}
+		 *
+		 */
+
+		return true;
 	}
 
 	/**
@@ -275,7 +290,7 @@ class dbversion {
 		}
 		if (!empty($paths)) {
 			foreach ($paths as $file => $p) {
-				$queries = $this->getFileQueries($p);
+				$queries = $this->get_queries_from_file($p);
 				
 				foreach ($queries as $sql) {
 					$sql = trim($sql);
@@ -374,149 +389,7 @@ class dbversion {
 		$this->printer->write("Patch file created; {$fullpath}");
 	}
 
-	/**
-	 *  function recordVersions:  Helps keep track of final disposition of
-	 *  versions to dbversion table.
-	 *
-	 */
-	/*
-	  public function recordVersions($versionIDs) {
-	  if (!is_array($versionIDs))
-	  $versionIDs = array($versionIDs);
-	  if ($this->versionsToRecord === null)
-	  $this->versionsToRecord = array();
-	  $this->versionsToRecord = array_merge($this->versionsToRecord, $versionIDs);
-	  }
-	 *
-	 */
 
-	/**
-	 *  function processXML: spin through the input (versions) and
-	 *  invoke performProcessOnVersion for each version.
-	 *  @return boolean whether or not the version processing completed.
-	 *
-	 */
-	protected function processXML() {
-		if ($this->db->doesTransactions())
-			$this->db->startTransaction();
-
-		foreach ($this->xml->version as $version) {
-			if ($this->performProcessOnVersion((string) $version->id) === false)
-				continue;
-			$processResults = $this->processVersion($version);
-		}
-
-		if ($this->db->doesTransactions()) {
-			if ($this->dryRun === true)
-				$this->db->failTransaction();
-			$processResults = $this->db->completeTransaction();
-		}
-		else {
-			$processResults = true;
-		}
-		return $processResults;
-	}
-
-	/**
-	 * function:  performProcessOnVersion validates a version against
-	 * user input to determine status, process or not.
-	 *
-	 * @param string $versionID
-	 * @return boolean
-	 *
-	 * protected function to perform logic
-	 * associated with whether or not a particular version is
-	 * supposed to be processed.
-	 */
-	protected function performProcessOnVersion($versionID) {
-		if (is_array($this->versionsToProcess) && is_array($this->skip_patches)) {
-			if (in_array($versionID, $this->versionsToProcess) && !in_array($versionID, $this->skip_patches)) {
-				return true;
-			} else {
-				return false;
-			}
-		} elseif (is_array($this->versionsToProcess) && $this->skip_patches === null) {
-			if (in_array($versionID, $this->versionsToProcess)) {
-				return true;
-			} else {
-				return false;
-			}
-		} elseif ($this->versionsToProcess === null && is_array($this->skip_patches)) {
-			if (in_array($versionID, $this->skip_patches)) {
-				return false;
-			} else {
-				return true;
-			}
-		} else {
-			// no rules on skipping or filtering, so we run it
-			return true;
-		}
-	}
-
-	/**
-	 *  function: processVersion:  do a single version, if it has not
-	 *  already been done.
-	 *
-	 *  There is the capability of processing DDL from it's own input
-	 *  rather from the statement element, in order to a) remove DDL from
-	 *  transaction processing and b) provide the ability to perform an
-	 *  undo action on DDL.  This supports DBMS's that do not include
-	 *  DDL (or data access language) in COMMIT/ROLLBACK processing.
-	 *
-	 */
-	protected function processVersion($version) {
-		$isVersionProcessed = $this->db->checkVersion((string) $version->id);
-		if ($isVersionProcessed == true) {
-			// skipping version
-			$this->printer->write("Skipping Version ID: " . (string) $version->id, 1);
-		} else if (is_array($this->versionsToRecord) && in_array((string) $version->id, $this->versionsToRecord)
-			&& $dryrun === false) {
-			$this->recordVersion((string) $version->id);
-		} else {
-			// processing version
-			$returnResults = array();
-
-			foreach ($version->ddl as $ddl) {
-				#echo "This is the ddl in: " . var_dump($ddl) . "<br>\n";
-				$ddl_sql = (string) $ddl->do;
-				$ddl_rollback_hold = (string) $ddl->undo;
-				#echo "Here is the ddl: " . var_dump((string)$ddl->do) . "\n";
-				#echo "Here is the undo ddl: " . var_dump((string)$ddl->undo) . "\n";
-				if ($ddl_sql and $ddl_rollback_hold) {
-					$this->db->addRollBack($ddl_rollback_hold);
-					$ok = $this->db->Execute($ddl_sql);
-					if (strlen($this->db->getError()) > 0) {
-						$this->printer->write($this->db->getError(), 1);
-					}
-					$returnResults[] = $ok;
-				} else {
-					$this->printer->write("Missing or unmatched DDL do and undo", 1);
-					$returnResults[] = false;
-				}
-			}
-			if (in_array(false, $returnResults)) {
-
-				continue;
-			} else {
-				foreach ($version->statement as $statement) {
-					$sql = (string) $statement;
-					$ok = $this->db->Execute($sql);
-					if (strlen($this->db->getError()) > 0) {
-						$this->printer->write($this->db->getError(), 1);
-					}
-					$returnResults[] = $ok;
-				}
-			}
-
-			$returnResults[] = $this->insertVersion($version);
-
-			if (in_array(false, $returnResults)) {
-				$this->printer->write("Adding Version ID: " . (string) $version->id . ", Status: Failed", 1);
-			} else {
-				$this->printer->write("Adding Version ID: " . (string) $version->id . ", Status: Success", 1);
-			}
-		}
-	}
 
 	/**
 	 *  function insertVersion: assuming all is ok up to now, attempt to
@@ -533,9 +406,27 @@ class dbversion {
 	 * @param $filepath - The full path of the patch file
 	 * @return Array
 	 */
-	protected function getFileQueries ($filepath) {
+	protected function get_queries_from_file($filepath) {
+		/*
 		$sql_lines = file_get_contents($filepath);
 		$queries = preg_split("/;+(?=([^'|^\\\']*['|\\\'][^'|^\\\']*['|\\\'])*[^'|^\\\']*[^'|^\\\']$)/", $sql_lines);
+		return $queries;
+		 */
+
+		$lines = file($filepath);
+		$queries = array();
+		$current_query = '';
+		foreach ($lines as $line) {
+
+			if (preg_match("/^\s*--/",$line)) continue;
+
+			$current_query .= $line;
+			if (preg_match("/;\s*$/",$line)) {
+				$queries[] = $current_query;
+				$current_query = '';
+			}
+		}
+
 		return $queries;
 	}
 

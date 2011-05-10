@@ -76,7 +76,7 @@ class database implements driverinterface {
 	 *
 	 */
 	public function doesTransactions() {
-		return true;
+		return false;
 	}
 
 	/**
@@ -227,6 +227,7 @@ class database implements driverinterface {
 		if ($result === false) {
 			$this->hasError = true;
 			$this->printer->write(mysql_error() . " is the result of the sql call", 1);
+			return $result;
 		} else {
 			return $result;
 		}
