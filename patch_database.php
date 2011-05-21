@@ -178,18 +178,15 @@ try {
 		 */
 	}
 
+	// lets process any skip values we get
+	if ($skip_value) {
+		$skipList = explode(",", $skip_value);
+		$app->skip_patches($skipList);
+	}
 
 	switch ($action) {
 		case "patch":
-
-			// lets process any skip values we get, as they only apply to patching
-			if ($skip_value) {
-				$skipList = explode(",", $skip_value);
-				$app->skip_patches($skipList);
-			}
-
 			$app->apply_patches();
-
 			break;
 
 		case "create":
@@ -197,6 +194,7 @@ try {
 			break;
 
 		case "list":
+			$app->list_patches();
 			break;
 
 		case "add":

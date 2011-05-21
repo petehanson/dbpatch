@@ -81,35 +81,21 @@ class dbversion {
 		if ($this->db)
 			$this->db->close();
 	}
-
+	
 	/**
-	 *  list_patches function: determines what patches need to be applied to the current working copy database
-	 *
+	 * needed_patches function:
+	 * Get a list of the patches that need to be applied to the database (taking into account skipped/added
+	 * patches). Returns an array('data'=>array(...), 'schema'=>array(...)), where data contains data patches
+	 * and schema contains schema patches.
 	 */
-	public function list_versions() {
-
-	}
-
-	/**
-	 *   apply_patches function:  executes the patching process
-	 *
-	 */
-	public function apply_patches() {
-		if (!$this->applyBaseSchema())
+	protected function needed_patches() {
+		if(!$this->applyBaseSchema()) {
 			return false;
+		}
 		
-		$return_result = true;
-
 		// get list of applied patches from db
 		$applied_patches = $this->db->get_applied_patches();
-		if (!empty($applied_patches)) {
-			$this->printer->write("");
-			$this->printer->write("Patches already applied and will be skipped:");
-			foreach ($applied_patches as $patch) {
-				$this->printer->write("\t" . $patch);
-			}
-		}
-
+		
 		// get list of patches on the file system
 		$schema_patches = $this->get_patch_files($this->schemapath);
 		$data_patches = $this->get_patch_files($this->datapath);
@@ -121,7 +107,30 @@ class dbversion {
 		// filter out any specified in skip
 		$needed_schema_patches = array_diff($needed_schema_patches, $this->skip_patches);
 		$needed_data_patches = array_diff($needed_data_patches, $this->skip_patches);
+		
+		return array(
+			'data' => $needed_data_patches,
+			'schema' => $needed_schema_patches
+		);
+	}
 
+	/**
+	 *  list_patches function: prints what patches need to be applied to the current working copy database.
+	 *  Optionally takes a parameter $needed_patches, an array in the format output by $this->needed_patches()
+	 *
+	 */
+	public function list_patches($needed_patches=null) {
+		// Get a list of the patches that need to be applied
+		if($needed_patches === null) {
+			$needed_patches = $this->needed_patches();
+			if($needed_patches === false) {
+				return false;
+			}
+		}
+		$needed_data_patches = $needed_patches['data'];
+		$needed_schema_patches = $needed_patches['schema'];
+
+		// Say which patches have been marked to be skipped
 		if (count($this->skip_patches) > 0) {
 			$this->printer->write("");
 			$this->printer->write("Schema patches that will be skipped:");
@@ -129,8 +138,8 @@ class dbversion {
 				$this->printer->write("\t" . $patch);
 			}
 		}
-
-
+		
+		// Say which schema patches will be applied
 		$this->printer->write("");
 		if (!empty($needed_schema_patches)) {
 			$this->printer->write("Schema patches that will be applied:");
@@ -142,6 +151,7 @@ class dbversion {
 		}
 		
 			
+		// Say which data patches will be applied
 		$this->printer->write("");
 		if (!empty($needed_data_patches)) {
 			$this->printer->write("Data patches that will be applied:");
@@ -152,10 +162,30 @@ class dbversion {
 			$this->printer->write("No data patches to be applied were found");
 		}
 
+		return true;
+	}
+
+	/**
+	 *   apply_patches function:  executes the patching process
+	 *
+	 */
+	public function apply_patches() {
+		$return_result = true;
+
+		// Get a list of the patches that need to be applied
+		$needed_patches = $this->needed_patches();
+		if($needed_patches === false) {
+			return false;
+		}
+		$needed_data_patches = $needed_patches['data'];
+		$needed_schema_patches = $needed_patches['schema'];
+
 		// sort patches into correct order by timestamp prefix (filename)
 		sort($needed_schema_patches);
 		sort($needed_data_patches);
-
+		
+		// Print out what patches will be applied/skipped
+		$this->list_patches($needed_patches);
 
 
 		if (empty($needed_schema_patches) && empty($needed_data_patches)) {
