@@ -57,9 +57,9 @@ try {
 	// two types of options, actions and modifiers
 	// actions: help, list, add, record, patch, create
 	// modifiers: verbose, quiet, skip (works only with patch)
-	$opts = Console_Getopt::getOpt($argv, "hqvlpa::s::r::c::",
+	$opts = Console_Getopt::getOpt($argv, "hqvlpa::s::S::r::c::",
 			array("help", "list", "verbose", "quiet", "add=",
-			    "skip=", "record=", "create=", "patch"));
+			    "skip=", "skip-and-record=", "record=", "create=", "patch"));
 
 	//print_r($opts);
 
@@ -78,6 +78,7 @@ try {
 	// modifier defaults
 	$printLevel = 1; // used with quiet and verbose
 	$skip_value = null;
+	$record_value = null;
 
 	if (is_array($opts[0])) {
 		foreach ($opts[0] as $argParameter) {
@@ -111,6 +112,11 @@ try {
 
 			if ($key == "s" || $key == "--skip") {
 				$skip_value = $value;
+			}
+			
+			if ($key == "S" || $key == "--skip-and-record") {
+				$skip_value = $value;
+				$record_value = $value;
 			}
 
 			if ($key == "r" || $key == "--record") {
@@ -187,6 +193,12 @@ try {
 	switch ($action) {
 		case "patch":
 			$app->apply_patches();
+			
+			// Process any values from --skip-and-record
+			if($record_value !== null) {
+				$recordList = explode(",", $record_value);
+				$app->record_patches($recordList);
+			}
 			break;
 
 		case "create":
@@ -261,6 +273,7 @@ function displayHelp() {
 	echo "List the patch versions:\t-l or --list\n";
 	echo "Use certain version IDs:\t-a or --add=versionID\n";
 	echo "Skip certain version IDs:\t-s or --skip=versionID\n";
+	echo "Skip and record version IDs:\t-S or --skip-and-record=versionID";
 	echo "Record certain version IDs:\t-r or --record=versionID\n";
 	echo "\n";
 	echo "You can use the --add parameter to only perform tasks ";
@@ -284,6 +297,11 @@ function displayHelp() {
 	echo "found in both directories, the process will be aborted and no patch will be applied.\n";
 	echo "Example: --skip=1_trunk_person,2_trunk_person  or  ";
 	echo "-s1_trunk_person,2_trunk_person\n";
+	echo "\n";
+	echo "You can use the --skip-and-record parameter to skip the ";
+	echo "specified list of version IDs and record them as already ";
+	echo "having been applied to the database. The usage of this option ";
+	echo "is the same as that of the --skip option.\n";
 	echo "\n";
 	echo "You can use the --record parameter to record the ";
 	echo "specified list of version IDs. This allows you to ";
