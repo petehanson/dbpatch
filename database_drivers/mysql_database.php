@@ -48,14 +48,14 @@ class database implements driverinterface {
 		$this->inTransaction = false;
 		$this->applyBase = false;
 
-		$this->connection =
-			mysql_connect($this->host, $this->username, $this->password);
+		$this->connection = new mysqli($this->host, $this->username, $this->password);
 
-		if ($this->connection === false)
-			throw new exception("Failed to connect to the database");
-		if (mysql_select_db($this->dbName) === false) {
+		if(mysqli_connect_error())
+			throw new exception("Failed to connect to the database (".mysqli_connect_errno().")");
+		
+		if($this->connection->select_db($this->dbName) === false) {
 			$this->createDatabase();
-			if (mysql_select_db($this->dbName) === false) {
+			if($this->connection->select_db($this->dbName) === false) {
 				throw new exception("Failed to connect to the database {$this->dbName}");	
 			}
 		}
@@ -66,7 +66,7 @@ class database implements driverinterface {
 	 *
 	 */
 	public function close() {
-		mysql_close($this->connection);
+		$this->connection->close();
 	}
 
 	/**
@@ -148,7 +148,7 @@ class database implements driverinterface {
 	protected function rowExists($sql) {
 		$result = $this->execute($sql);
 		if ($result) {
-			$numRows = mysql_num_rows($result);
+			$numRows = $result->num_rows;
 
 			if ($numRows > 0) {
 				return true;
@@ -172,7 +172,7 @@ class database implements driverinterface {
 
 		$results = $this->execute($sql);
 		if (!empty($results)) {
-			while ($row = mysql_fetch_assoc($results)) {
+			while ($row = $results->fetch_assoc()) {
 				$return_array[] = $row['applied_patch'];
 			}
 		}
@@ -190,7 +190,7 @@ class database implements driverinterface {
 	public function checkVersion($versionID) {
 		$versionSQL = "select * from dbversion where db_version_id = '%s'";
 
-		$sql = sprintf($versionSQL, mysql_escape_string($versionID));
+		$sql = sprintf($versionSQL, $this->connection->escape_string($versionID));
 
 		if ($this->rowExists($sql)) {
 			return true;
@@ -206,7 +206,9 @@ class database implements driverinterface {
 	 */
 	public function insertVersion($id, $date) {
 		$versionInsertSQL = "INSERT INTO dbversion VALUES ('%s','%s')";
-		$sql = sprintf($versionInsertSQL, mysql_escape_string($id), mysql_escape_string($date));
+		$sql = sprintf($versionInsertSQL,
+			$this->connection->escape_string($id),
+			$this->connection->escape_string($date));
 
 		return $this->execute($sql);
 	}
@@ -215,7 +217,10 @@ class database implements driverinterface {
 	 *  function execute: generic sql processor function, with wto if
 	 *  bad.
 	 *  @param string $sql The sql statement to run.
-	 *  @return boolean Yea or nay on execution status.
+	 *  @return mixed Returns FALSE on SQL execution error. If exactly one of the SQL statements returns
+	 *          results, returns that MySQLi_Result object. If more than one of the SQL statements returns
+	 *          results, returns an array of MySQLi_Result objects. If the execution was successful, but
+	 *          no results were returned (e.g. INSERT statements), returns TRUE.
 	 *  @todo Suggest write to printer altered to feedback back to
 	 *  calling interface, separating interface from logic and execution.
 	 *
@@ -223,13 +228,32 @@ class database implements driverinterface {
 	public function execute($sql) {
 		$this->printer->write("executing statement:", 2);
 		$this->printer->write($sql, 2);
-		$result = mysql_query($sql);
-		if ($result === false) {
+		
+		// Execute the SQL statement(s)
+		$this->connection->multi_query($sql);
+		if($this->connection->error) {
 			$this->hasError = true;
-			$this->printer->write(mysql_error() . " is the result of the sql call", 1);
-			return $result;
+			$this->printer->write('SQL error: '.$this->connection->error, 1);
+			return false;
+		}
+		
+		// Retrieve result set
+		$results = array();
+		do {
+			if($r = $this->connection->store_result()) {
+				$results[] = $r;
+			}
+		} while($this->connection->next_result());
+		
+		// If none of the statements return results, but the execution was successful, return true.
+		// If there was one result, return it. If there were more than one result-returning
+		// statements, return all of their results as an array.
+		if(count($results) === 0) {
+			return true;
+		} else if(count($results) === 1) {
+			return $results[0];
 		} else {
-			return $result;
+			return $results;
 		}
 	}
 
@@ -239,7 +263,7 @@ class database implements driverinterface {
 	 *
 	 */
 	public function getError() {
-		return mysql_error();
+		return $this->connection->error;
 	}
 
 	/**
@@ -302,11 +326,11 @@ class database implements driverinterface {
 	private function createDatabase () {
 		$answer = $this->printer->ask("Database {$this->dbName} does not exist. Want to create the database right now? (y/n)");
 		if ($answer == 'y') {
-			if (mysql_query("CREATE DATABASE {$this->dbName}", $this->connection)) {
+			if ($this->connection->query("CREATE DATABASE {$this->dbName}")) {
 				$this->printer->write("Database created");
 				$this->is_new = true;
 			} else {
-				throw new exception("Error creating database: " . mysql_error());
+				throw new exception("Error creating database: " . $this->connection->error);
 			}
 		} elseif ($answer == 'n') {
 			$this->printer->write("The database was not created. Process aborted.");

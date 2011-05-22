@@ -201,21 +201,8 @@ class dbversion {
 					// record the patch data into dbversion
 					$fullpath = realpath($this->$pathname . "/" . $patch);
 	
-					$queries = $this->get_queries_from_file($fullpath);
-					print_r($queries);
-					//continue;
-					foreach ($queries as $sql) {
-						$sql = trim($sql);
-
-						// if somehow we have a blank statement, then we just go to the next
-						if (empty($sql)) continue;
-
-						/*
-						if (in_array($sql[0], $this->commentCharcters) || empty($sql))
-							continue;
-						 */
-						$result = $this->db->execute($sql);
-					}
+					$sql = $this->get_queries_from_file($fullpath);
+					$this->db->execute($sql);
 					if ($this->db->has_error()) {
 						$this->printer->write("Error: {$fullpath}");
 						$return_result = false;
@@ -437,27 +424,7 @@ class dbversion {
 	 * @return Array
 	 */
 	protected function get_queries_from_file($filepath) {
-		/*
-		$sql_lines = file_get_contents($filepath);
-		$queries = preg_split("/;+(?=([^'|^\\\']*['|\\\'][^'|^\\\']*['|\\\'])*[^'|^\\\']*[^'|^\\\']$)/", $sql_lines);
-		return $queries;
-		 */
-
-		$lines = file($filepath);
-		$queries = array();
-		$current_query = '';
-		foreach ($lines as $line) {
-
-			if (preg_match("/^\s*--/",$line)) continue;
-
-			$current_query .= $line;
-			if (preg_match("/;\s*$/",$line)) {
-				$queries[] = $current_query;
-				$current_query = '';
-			}
-		}
-
-		return $queries;
+		return file_get_contents($filepath);
 	}
 
 }
