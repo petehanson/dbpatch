@@ -81,7 +81,7 @@ class dbversion {
 		if ($this->db)
 			$this->db->close();
 	}
-	
+
 	/**
 	 * needed_patches function:
 	 * Get a list of the patches that need to be applied to the database (taking into account skipped/added
@@ -89,13 +89,13 @@ class dbversion {
 	 * and schema contains schema patches.
 	 */
 	protected function needed_patches() {
-		if(!$this->applyBaseSchema()) {
+		if (!$this->applyBaseSchema()) {
 			return false;
 		}
-		
+
 		// get list of applied patches from db
 		$applied_patches = $this->db->get_applied_patches();
-		
+
 		// get list of patches on the file system
 		$schema_patches = $this->get_patch_files($this->schemapath);
 		$data_patches = $this->get_patch_files($this->datapath);
@@ -107,10 +107,10 @@ class dbversion {
 		// filter out any specified in skip
 		$needed_schema_patches = array_diff($needed_schema_patches, $this->skip_patches);
 		$needed_data_patches = array_diff($needed_data_patches, $this->skip_patches);
-		
+
 		return array(
-			'data' => $needed_data_patches,
-			'schema' => $needed_schema_patches
+		    'data' => $needed_data_patches,
+		    'schema' => $needed_schema_patches
 		);
 	}
 
@@ -121,9 +121,9 @@ class dbversion {
 	 */
 	public function list_patches($needed_patches=null) {
 		// Get a list of the patches that need to be applied
-		if($needed_patches === null) {
+		if ($needed_patches === null) {
 			$needed_patches = $this->needed_patches();
-			if($needed_patches === false) {
+			if ($needed_patches === false) {
 				return false;
 			}
 		}
@@ -138,7 +138,7 @@ class dbversion {
 				$this->printer->write("\t" . $patch);
 			}
 		}
-		
+
 		// Say which schema patches will be applied
 		$this->printer->write("");
 		if (!empty($needed_schema_patches)) {
@@ -149,8 +149,8 @@ class dbversion {
 		} else {
 			$this->printer->write("No schema patches to be applied were found");
 		}
-		
-			
+
+
 		// Say which data patches will be applied
 		$this->printer->write("");
 		if (!empty($needed_data_patches)) {
@@ -174,7 +174,7 @@ class dbversion {
 
 		// Get a list of the patches that need to be applied
 		$needed_patches = $this->needed_patches();
-		if($needed_patches === false) {
+		if ($needed_patches === false) {
 			return false;
 		}
 		$needed_data_patches = $needed_patches['data'];
@@ -183,7 +183,7 @@ class dbversion {
 		// sort patches into correct order by timestamp prefix (filename)
 		sort($needed_schema_patches);
 		sort($needed_data_patches);
-		
+
 		// Print out what patches will be applied/skipped
 		$this->list_patches($needed_patches);
 
@@ -196,11 +196,11 @@ class dbversion {
 			$this->printer->write("Applying patches:");
 			// on each patch, apply it to the DB
 			foreach (array("schemapath" => $needed_schema_patches, "datapath" => $needed_data_patches) as $pathname => $needed_patches) {
-	
+
 				foreach ($needed_patches as $patch) {
 					// record the patch data into dbversion
 					$fullpath = realpath($this->$pathname . "/" . $patch);
-	
+
 					$sql = $this->get_queries_from_file($fullpath);
 					$this->db->execute($sql);
 					if ($this->db->has_error()) {
@@ -219,13 +219,14 @@ class dbversion {
 
 		return $return_result;
 	}
-	
+
 	/**
 	 * function applyBaseSchema: Apllies the base schema to the database when necessary(Creates the table structure)
 	 */
-	public function applyBaseSchema () {
+	public function applyBaseSchema() {
 		if ($this->db->isNewDB()) {
 			$fullpath = realpath($this->basepath . "/" . $this->basefile);
+			// there's no need for these methods, as this functionality should be handled in the database driver, where these properties are available.
 			$output = system("mysql -h " . $this->db->getHost() . " -u " . $this->db->getUser() . " -p" . $this->db->getPassword() . " " . $this->db->getDBName() . " < \"{$fullpath}\"");
 			if ($output) {
 				$this->printer->write("Error: Could not create tables structure using {$fullpath}");
@@ -233,15 +234,16 @@ class dbversion {
 			} else {
 				$this->printer->write("Success: Created tables structure using {$fullpath}");
 				return true;
-			} 
+			}
 		}
 		return true;
 	}
+
 	protected function get_patch_files($path) {
 		$files = array();
 		$dir = new DirectoryIterator($path);
 		foreach ($dir as $item) {
-			if (!$item->isDot() && preg_match("/^\d{8}_\d{6}/",$item->getFilename())) {
+			if (!$item->isDot() && preg_match("/^\d{8}_\d{6}/", $item->getFilename())) {
 				$files[] = $item->getFilename();
 			}
 		}
@@ -262,14 +264,14 @@ class dbversion {
 		}
 
 		/*
-		if ($this->db->doesTransactions()) {
-			if ($this->dryRun === true)
-				$this->db->failTransaction();
-			return $this->db->completeTransaction();
-		}
-		else {
-			return true;
-		}
+		  if ($this->db->doesTransactions()) {
+		  if ($this->dryRun === true)
+		  $this->db->failTransaction();
+		  return $this->db->completeTransaction();
+		  }
+		  else {
+		  return true;
+		  }
 		 *
 		 */
 
@@ -283,7 +285,7 @@ class dbversion {
 	public function add_patches($patches) {
 		$paths = array();
 		$applied_patches = $this->db->get_applied_patches();
-		foreach($patches as $patch) {
+		foreach ($patches as $patch) {
 			//echo $patch."\n";
 			if (in_array($patch, $applied_patches)) {
 				$this->printer->write("Patch {$patch} is already applied and will be skipped.\n");
@@ -308,7 +310,7 @@ class dbversion {
 		if (!empty($paths)) {
 			foreach ($paths as $file => $p) {
 				$queries = $this->get_queries_from_file($p);
-				
+
 				foreach ($queries as $sql) {
 					$sql = trim($sql);
 					if (in_array($sql[0], $this->commentCharcters) || empty($sql))
@@ -406,8 +408,6 @@ class dbversion {
 		$this->printer->write("Patch file created; {$fullpath}");
 	}
 
-
-
 	/**
 	 *  function insertVersion: assuming all is ok up to now, attempt to
 	 *  actually insert the version info into dbversion table.
@@ -417,7 +417,7 @@ class dbversion {
 	protected function insertVersion($version) {
 		return $this->db->insertVersion($version, date('Y-m-d'));
 	}
-	
+
 	/**
 	 * Extracts the queries from a given patch file
 	 * @param $filepath - The full path of the patch file
