@@ -224,30 +224,6 @@ try {
 			displayHelp();
 			break;
 	}
-
-	die();
-
-
-	if ($addText) {
-		$addList = explode(",", $addText);
-		$app->addVersions($addList);
-	}
-
-	if ($skipText) {
-		$skipList = explode(",", $skipText);
-		$app->skipVersions($skipList);
-	}
-
-	if ($recordText) {
-		$recordList = explode(",", $recordText);
-		$app->recordVersions($recordList);
-	}
-
-	if ($runList === true) {
-		$app->listVersions();
-	} else {
-		$app->execute();
-	}
 } catch (Exception $e) {
 	echo "{$e->getMessage()}\n";
 	echo "{$e->getTraceAsString()}\n";
