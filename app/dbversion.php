@@ -190,7 +190,8 @@ class dbversion {
 			$this->printer->write("No patches were applied.");
 		} else {
 			$this->printer->write("");
-			$this->printer->write("Applying patches:");
+			$this->add_patches(array_merge($needed_schema_patches, $needed_data_patches));
+			/*$this->printer->write("Applying patches:");
 			// on each patch, apply it to the DB
 			foreach (array("schemapath" => $needed_schema_patches, "datapath" => $needed_data_patches) as $pathname => $needed_patches) {
 
@@ -210,7 +211,7 @@ class dbversion {
 						$this->record_patches($patch);
 					}
 				}
-			}
+			}*/
 		}
 
 
@@ -287,15 +288,8 @@ class dbversion {
 		}
 		if (!empty($paths)) {
 			foreach ($paths as $file => $p) {
-				$queries = $this->get_queries_from_file($p);
-
-				foreach ($queries as $sql) {
-					$sql = trim($sql);
-					if (in_array($sql[0], $this->commentCharcters) || empty($sql))
-						continue;
-					//echo $sql;	
-					$result = $this->db->execute($sql);
-				}
+				$sql = $this->get_queries_from_file($p);
+				$this->db->execute($sql);
 				if ($this->db->has_error()) {
 					$this->printer->write("Error: {$p}");
 					$return_result = false;
