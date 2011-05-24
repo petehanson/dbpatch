@@ -67,6 +67,9 @@ class dbversion {
 		$this->versionsToRecord = null;
 
 		$this->db = new database(config::$dbHost, config::$dbName, config::$dbUsername, config::$dbPassword, $printer);
+		if (!$this->applyBaseSchema()) {
+			return false;
+		}
 		$this->db->checkForDBVersion();
 
 		date_default_timezone_set(config::$standardized_timezone);
@@ -89,10 +92,6 @@ class dbversion {
 	 * and schema contains schema patches.
 	 */
 	protected function needed_patches() {
-		if (!$this->applyBaseSchema()) {
-			return false;
-		}
-
 		// get list of applied patches from db
 		$applied_patches = $this->db->get_applied_patches();
 
@@ -221,14 +220,13 @@ class dbversion {
 	}
 
 	/**
-	 * function applyBaseSchema: Apllies the base schema to the database when necessary(Creates the table structure)
+	 * function applyBaseSchema: Applies the base schema to the database when necessary(Creates the table structure)
 	 */
 	public function applyBaseSchema() {
-		if ($this->db->isNewDB()) {
+		if ($this->db->isNewDB() || !$this->db->dbExists()) {
 			$fullpath = realpath($this->basepath . "/" . $this->basefile);
-			// there's no need for these methods, as this functionality should be handled in the database driver, where these properties are available.
-			$output = system("mysql -h " . $this->db->getHost() . " -u " . $this->db->getUser() . " -p" . $this->db->getPassword() . " " . $this->db->getDBName() . " < \"{$fullpath}\"");
-			if ($output) {
+			$success = $this->db->executeBase(file_get_contents($fullpath));
+			if (!$success) {
 				$this->printer->write("Error: Could not create tables structure using {$fullpath}");
 				return false;
 			} else {

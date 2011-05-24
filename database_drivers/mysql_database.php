@@ -11,6 +11,7 @@
  *
  */
 require_once("driverinterface.php");
+require_once("lib/sql.php");
 
 /**
  *   class database, for mysql processing.
@@ -31,6 +32,7 @@ class database implements driverinterface {
 	protected $inTransaction;
 	protected $ddl_rollback;
 	protected $is_new;
+	protected $dbExists;
 
 	/**
 	 *   __construct function, describes environment and sets up connection.
@@ -47,17 +49,17 @@ class database implements driverinterface {
 		$this->hasError = false;
 		$this->inTransaction = false;
 		$this->applyBase = false;
+		
+		$this->is_new = false;
 
 		$this->connection = new mysqli($this->host, $this->username, $this->password);
 
 		if (mysqli_connect_error ())
 			throw new exception("Failed to connect to the database (" . mysqli_connect_errno() . ")");
 
+		$this->dbExists = true;
 		if ($this->connection->select_db($this->dbName) === false) {
-			$this->createDatabase();
-			if ($this->connection->select_db($this->dbName) === false) {
-				throw new exception("Failed to connect to the database {$this->dbName}");
-			}
+			$this->dbExists = false;
 		}
 	}
 
@@ -146,7 +148,10 @@ class database implements driverinterface {
 	 *
 	 */
 	protected function rowExists($sql) {
-		$result = $this->execute($sql);
+		$result = $this->execute($sql, true);
+		if (is_array($result)) {
+			return false;
+		}
 		if ($result) {
 			$numRows = $result->num_rows;
 
@@ -169,7 +174,7 @@ class database implements driverinterface {
 		$return_array = array();
 		$sql = "select * from dbversion";
 
-		$results = $this->execute($sql);
+		$results = $this->execute($sql, true);
 		if (!empty($results)) {
 			while ($row = $results->fetch_assoc()) {
 				$return_array[] = $row['applied_patch'];
@@ -195,18 +200,46 @@ class database implements driverinterface {
 	}
 
 	/**
+	 * function clearResults: clear any MySQL result sets in the queue
+	 */
+	protected function clearResults() {
+		do {
+			if ($r = $this->connection->use_result()) {
+				$r->free();
+			}
+		} while ($this->connection->next_result());
+	}
+	
+	/**
+	 * function storeResults: store any MySQL result sets. Make sure to call ->free() on
+	 *    each result object when you're done using it.
+	 * @return array of MySQLi_Result objects or a single MySQLi_Result object
+	 */
+	protected function storeResults() {
+		$results = array();
+		do {
+			if ($r = $this->connection->store_result()) {
+				$results[] = $r;
+			}
+		} while ($this->connection->next_result());
+		if(count($results) === 1) {
+			return $results[0];
+		}
+		return $results;
+	}
+
+	/**
 	 *  function execute: generic sql processor function, with wto if
 	 *  bad.
 	 *  @param string $sql The sql statement to run.
-	 *  @return mixed Returns FALSE on SQL execution error. If exactly one of the SQL statements returns
-	 *          results, returns that MySQLi_Result object. If more than one of the SQL statements returns
-	 *          results, returns an array of MySQLi_Result objects. If the execution was successful, but
-	 *          no results were returned (e.g. INSERT statements), returns TRUE.
+	 *  @param boolean $storeResults Whether or not to return the result of the SQL query
+	 *  @return boolean FALSE on error. If $storeResults, return the result set from $this->storeResults()
+	 *       upon success. Otherwise, return TRUE upon success.
 	 *  @todo Suggest write to printer altered to feedback back to
 	 *  calling interface, separating interface from logic and execution.
 	 *
 	 */
-	public function execute($sql) {
+	public function execute($sql, $storeResults=false) {
 		$this->printer->write("executing statement:", 2);
 		$this->printer->write($sql, 2);
 
@@ -215,27 +248,14 @@ class database implements driverinterface {
 		if ($this->connection->error) {
 			$this->hasError = true;
 			$this->printer->write('SQL error: ' . $this->connection->error, 1);
+			$this->clearResults();
 			return false;
 		}
-
-		// Retrieve result set
-		$results = array();
-		do {
-			if ($r = $this->connection->store_result()) {
-				$results[] = $r;
-			}
-		} while ($this->connection->next_result());
-
-		// If none of the statements return results, but the execution was successful, return true.
-		// If there was one result, return it. If there were more than one result-returning
-		// statements, return all of their results as an array.
-		if (count($results) === 0) {
-			return true;
-		} else if (count($results) === 1) {
-			return $results[0];
-		} else {
-			return $results;
+		if ($storeResults) {
+			return $this->storeResults();
 		}
+		$this->clearResults();
+		return true;
 	}
 
 
@@ -256,11 +276,18 @@ class database implements driverinterface {
 	public function isNewDB() {
 		return ($this->is_new) ? true : false;
 	}
+	
+	/**
+	 * function dbExists: Tells whether or not the database actually exists on the server.
+	 */
+	public function dbExists() {
+		return ($this->dbExists) ? true : false;
+	}
 
 
 
 	/**
-	 * function createDatabase: Attempts to creates the datbase if it does not exists
+	 * function createDatabase: Attempts to creates the database if it does not exist
 	 */
 	protected function createDatabase() {
 		$answer = $this->printer->ask("Database {$this->dbName} does not exist. Want to create the database right now? (y/n)");
@@ -268,6 +295,11 @@ class database implements driverinterface {
 			if ($this->connection->query("CREATE DATABASE {$this->dbName}")) {
 				$this->printer->write("Database created");
 				$this->is_new = true;
+				$this->dbExists = true;
+				if ($this->connection->select_db($this->dbName) === false) {
+					$this->dbExists = false;
+					throw new exception("Failed to connect to the database {$this->dbName}");
+				}
 			} else {
 				throw new exception("Error creating database: " . $this->connection->error);
 			}
@@ -277,6 +309,20 @@ class database implements driverinterface {
 		} else {
 			$this->createDatabase();
 		}
+	}
+	
+	
+	/**
+	 * function executeBase: Execute the base schema, first creating the database if it isn't created
+	 * by the SQL string.
+	 * @return boolean TRUE on success, FALSE on failure
+	 */
+	public function executeBase($sql) {
+		$sqlobj = new SQL($sql);
+		if (!$sqlobj->createsDatabase()) {
+			$this->createDatabase();
+		}
+		return $this->execute($sql);
 	}
 
 

@@ -160,6 +160,16 @@ class database implements driverinterface
 	return $result;
     }
 
+    /**
+     * function executeBase: Execute the base schema.
+     * TODO: For now, this is just an alias for execute(), since the rest of the driver assumes the
+     *       database already exists.
+     * @return boolean TRUE on success, FALSE on failure
+     */
+    public function executeBase($sql) {
+	return $this->execute($sql);
+    }
+
     public function getError()
     {
 	return pg_last_error();
