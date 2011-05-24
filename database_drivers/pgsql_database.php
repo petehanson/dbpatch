@@ -32,7 +32,7 @@ class database implements driverinterface
     protected $hasError;
     protected $inTransaction;
 
-    public function __construct($host,$db,$username,$password,printer $printer)
+    public function __construct($host,$db,$username,$password,printer $printer,$basefile=null)
     {
 	$this->host = $host;
 	$this->dbName = $db;
@@ -158,16 +158,6 @@ class database implements driverinterface
 	$result = pg_query($sql);
 	if ($result === false) $this->hasError = true;
 	return $result;
-    }
-
-    /**
-     * function executeBase: Execute the base schema.
-     * TODO: For now, this is just an alias for execute(), since the rest of the driver assumes the
-     *       database already exists.
-     * @return boolean TRUE on success, FALSE on failure
-     */
-    public function executeBase($sql) {
-	return $this->execute($sql);
     }
 
     public function getError()

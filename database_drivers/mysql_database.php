@@ -38,7 +38,7 @@ class database implements driverinterface {
 	 *   __construct function, describes environment and sets up connection.
 	 *
 	 */
-	public function __construct($host, $db, $username, $password, printer $printer) {
+	public function __construct($host, $db, $username, $password, printer $printer, $basefile=null) {
 		$this->host = $host;
 		$this->dbName = $db;
 		$this->username = $username;
@@ -57,9 +57,14 @@ class database implements driverinterface {
 		if (mysqli_connect_error ())
 			throw new exception("Failed to connect to the database (" . mysqli_connect_errno() . ")");
 
+		// Try to select the database, creating it and applying the base schema if it doesn't exist
 		$this->dbExists = true;
 		if ($this->connection->select_db($this->dbName) === false) {
-			$this->dbExists = false;
+			if($basefile === null) {
+				$this->executeBase();
+			} else {
+				$this->executeBase(file_get_contents($basefile));
+			}
 		}
 	}
 
@@ -317,12 +322,17 @@ class database implements driverinterface {
 	 * by the SQL string.
 	 * @return boolean TRUE on success, FALSE on failure
 	 */
-	public function executeBase($sql) {
-		$sqlobj = new SQL($sql);
-		if (!$sqlobj->createsDatabase()) {
+	protected function executeBase($sql=null) {
+		if($sql === null) {
 			$this->createDatabase();
+			return true;
+		} else {
+			$sqlobj = new SQL($sql);
+			if (!$sqlobj->createsDatabase()) {
+				$this->createDatabase();
+			}
+			return $this->execute($sql);
 		}
-		return $this->execute($sql);
 	}
 
 

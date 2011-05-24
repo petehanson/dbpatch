@@ -66,10 +66,8 @@ class dbversion {
 		$this->skip_patches = array();
 		$this->versionsToRecord = null;
 
-		$this->db = new database(config::$dbHost, config::$dbName, config::$dbUsername, config::$dbPassword, $printer);
-		if (!$this->applyBaseSchema()) {
-			return false;
-		}
+		$baseschema = realpath($this->basepath . "/" . $this->basefile);
+		$this->db = new database(config::$dbHost, config::$dbName, config::$dbUsername, config::$dbPassword, $printer, $baseschema);
 		$this->db->checkForDBVersion();
 
 		date_default_timezone_set(config::$standardized_timezone);
@@ -217,24 +215,6 @@ class dbversion {
 
 
 		return $return_result;
-	}
-
-	/**
-	 * function applyBaseSchema: Applies the base schema to the database when necessary(Creates the table structure)
-	 */
-	public function applyBaseSchema() {
-		if ($this->db->isNewDB() || !$this->db->dbExists()) {
-			$fullpath = realpath($this->basepath . "/" . $this->basefile);
-			$success = $this->db->executeBase(file_get_contents($fullpath));
-			if (!$success) {
-				$this->printer->write("Error: Could not create tables structure using {$fullpath}");
-				return false;
-			} else {
-				$this->printer->write("Success: Created tables structure using {$fullpath}");
-				return true;
-			}
-		}
-		return true;
 	}
 
 	protected function get_patch_files($path) {
