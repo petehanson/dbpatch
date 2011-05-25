@@ -237,58 +237,80 @@ try {
 function displayHelp() {
 	global $version;
 
-	echo "Help on the database patching script. Version: {$version}\n";
-	echo "Usage: patch_database.php [options] \n";
-	echo "\n";
-	echo "Available Options:\n";
-	echo "This help screen:\t\t-h or --help\n";
-	echo "Executes the patch process:\t-p or --patch\n";
-	echo "Verbose Output:\t\t\t-v or --verbose\n";
-	echo "No Output:\t\t\t-q or --quiet\n";
-	echo "Do a dry run:\t\t\t-d or --dryrun\n";
-	echo "List the patch versions:\t-l or --list\n";
-	echo "Use certain version IDs:\t-a or --add=versionID\n";
-	echo "Skip certain version IDs:\t-s or --skip=versionID\n";
-	echo "Skip and record version IDs:\t-S or --skip-and-record=versionID";
-	echo "Record certain version IDs:\t-r or --record=versionID\n";
-	echo "\n";
-	echo "You can use the --add parameter to only perform tasks ";
-	echo "for the specified list of version IDs. You can specify ";
-	echo "multiple version IDs by using a comma seperated list. ";
-	echo "Just make sure there are no spaces between the commas ";
-	echo "and values.\n";
-	echo "The specified patch files will be searched in the sql/data and sql/schema. ";
-	echo "If one or more of the specified files is not found, the process will be ";
-	echo "aborted and no patch will be applied. If one or more of the specified files is ";
-	echo "found in both directories, the process will be aborted and no patch will be applied.\n";
-	echo "Example: --add=1_trunk_person,2_trunk_person  or  ";
-	echo "-a1_trunk_person,2_trunk_person\n";
-	echo "\n";
-	echo "You can use the --skip parameter to skip the specified ";
-	echo "list of version IDs. You can specify multiple version IDs ";
-	echo "by using a comma seperated list. Just make sure there ";
-	echo "are no spaces between the commas and values.\n";
-	echo "The specified patch files will be searched in the sql/data and sql/schema. ";
-	echo "If one or more of the specified files is ";
-	echo "found in both directories, the process will be aborted and no patch will be applied.\n";
-	echo "Example: --skip=1_trunk_person,2_trunk_person  or  ";
-	echo "-s1_trunk_person,2_trunk_person\n";
-	echo "\n";
-	echo "You can use the --skip-and-record parameter to skip the ";
-	echo "specified list of version IDs and record them as already ";
-	echo "having been applied to the database. The usage of this option ";
-	echo "is the same as that of the --skip option.\n";
-	echo "\n";
-	echo "You can use the --record parameter to record the ";
-	echo "specified list of version IDs. This allows you to ";
-	echo "mark a version as performed permanently in your db ";
-	echo "instance. The IDs specified to be recorded can be ";
-	echo "affected by the IDs specified in the --add and --skip ";
-	echo "switches. You can specify multiple version IDs by using ";
-	echo "a comma seperated list. Just make sure there are no ";
-	echo "spaces between the commas and values.\n";
-	echo "Example: --record=1_trunk_person,2_trunk_person  or  ";
-	echo "-r1_trunk_person,2_trunk_person\n";
-	echo "\n";
+	$help = <<<EOHELP
+Version: $version
+Usage: ./patch_database [COMMAND] [COMMANDOPTS] [OPTIONS]
+
+
+Where COMMAND is one of:
+
+   -h or --help
+      Show script usage information.
+   
+   -p or --patch
+      Apply any patches that haven't already been applied to the database.
+   
+   -l or --list
+      List which patches would be applied to the database if --patch was run.
+   
+   -aVERSION or --add=VERSION
+      Apply one or more patches to the database, specified by VERSION. See below
+      for the syntax of VERSION.
+   
+   -rVERSION or --record=VERSION
+      Mark one or more patches as already having been added to the database, but
+      don't actually apply the patches. See below for the syntax of VERSION.
+
+
+VERSION syntax:
+
+   VERSION is a comma separated list of SQL patch filenames. For example, to
+   specify the patches 1_trunk_person.sql and 2_trunk_person.sql, replace
+   'VERSION' with '1_trunk_person.sql,2_trunk_person.sql' (note that there is
+   no space after the comma).
+
+
+COMMANDOPTS (command-specific options):
+
+   For --patch, the following COMMANDOPTS are available:
+   
+      -sVERSION or --skip=VERSION
+         Ignore the patches specified by VERSION.
+      
+      -SVERSION or --skip-and-record=VERSION
+         Ignore the patches specified by VERSION, but mark them as having been
+         added to the database. This prevents them from being added by future
+         --patch runs.
+   
+   No other commands accept any options.
+
+
+OPTIONS:
+
+   -v or --verbose
+      Show debug information while running.
+   
+   -q or --quiet
+      Don't show any output unless specifically requested (e.g., via --list).
+   
+   -d or --dryrun
+      Don't make any changes to the database.
+
+EOHELP;
+	
+	$proc = proc_open('less', array(
+		0 => array('pipe', 'r'),
+		2 => array('pipe', 'w')
+	), $pipes);
+	if(is_resource($proc)) {
+		fwrite($pipes[0], $help);
+		fclose($pipes[0]);
+		$return = proc_close($proc);
+		if($return != 0) {
+			echo $help;
+		}
+	} else {
+		echo $help;
+	}
 }
 ?>
