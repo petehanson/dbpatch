@@ -55,8 +55,8 @@ class SQL {
 		$re .= '|\/\*[\ \t\r\n\S]*?\*\/'; # C style comments
 		$re .= '|(?:[\w:@]+(?:\.(?:\w+|\*)?)*)'; # words, standard named placeholders, db.table.*, db.*
 		$re .= '|(?: \$_\$ | \$\d+ | \${1,2} )'; # dollar expressions - eg $_$ $3 $$
-		$re .= "|\n"; # newline
-		$re .= "|[\t\ ]+"; # any kind of white spaces
+		$re .= '|\\n'; # newline
+		$re .= '|[\\t\ ]+'; # any kind of white spaces
 		$re .= ')/smx';
 
 		// Split into tokens and return the result
@@ -104,6 +104,26 @@ class SQL {
 			}
 		}
 		return false;
+	}
+	
+	// Return this SQL statement as a list of SQL strings, each containing exactly one query
+	public function splitQueries() {
+		$tokens = $this->toTokens();
+		$queries = array();
+		$query = '';
+		foreach($tokens as $tok) {
+			if($tok === ';' && trim($query) !== '') {
+				$queries[] = $query;
+				$query = '';
+			} else {
+				$query .= $tok;
+			}
+		}
+		// Add the last query if it didn't end in a ';'
+		if(trim($query) !== '') {
+			$queries[] = $query;
+		}
+		return $queries;
 	}
 }
 
