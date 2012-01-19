@@ -297,7 +297,7 @@ class database implements driverinterface {
 	protected function createDatabase() {
 		$answer = $this->printer->ask("Database {$this->dbName} does not exist. Want to create the database right now? (y/n)");
 		if ($answer == 'y') {
-			if ($this->connection->query("CREATE DATABASE {$this->dbName}")) {
+			if ($this->connection->query("CREATE DATABASE `{$this->dbName}`")) {
 				$this->printer->write("Database created");
 				$this->is_new = true;
 				$this->dbExists = true;
