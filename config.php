@@ -1,20 +1,60 @@
 <?php
+require_once 'DbPatch/Config/Master.php';
 
-class config {
-
-	public static $dbClassFile = "mysql_database.php";
-	public static $dbHost = "localhost";
-	public static $dbName = "test";
-	public static $dbUsername = "root";
-	public static $dbPassword = "root";
-
-
-	public static $basefile = "base.sql";
-	public static $basepath = "sql/base/";
-	public static $schemapath = "sql/schema/";
-	public static $datapath = "sql/data/";
-	public static $standardized_timezone = "UTC";
-
+class config extends DbPatch_Config_Master
+{
+    /**
+     * Property with all the database to connect to.
+     *
+     * <code>
+     * $db = array(
+     *   'blog' => array(
+     *       'driver' => 'mysql_database.php',
+     *       'host'   => 'localhost',
+     *       'name'   => 'my_blog',
+     *       'user'   => 'user',
+     *       'pass'   => 'secret',
+     *   ),
+     *   'cms' => array(
+     *       'driver' => 'mysql_database.php',
+     *       'host'   => 'localhost',
+     *       'name'   => 'my_cms',
+     *       'user'   => 'user',
+     *       'pass'   => 'secret',
+     *   ),
+     *   'test' => array(
+     *       'driver' => 'mysql_database.php',
+     *       'host'   => 'localhost',
+     *       'name'   => 'my_test_db',
+     *       'user'   => 'user',
+     *       'pass'   => 'secret',
+     *   ),
+     * );
+     * </code>
+     *
+     * @var array
+     */
+    public static $db = array(
+        'blog' => array(
+            'driver' => 'mysql_database.php',
+            'host'   => 'localhost',
+            'name'   => 'peter_blog',
+            'user'   => 'user',
+            'pass'   => 'secret',
+        ),
+        'cms' => array(
+            'driver' => 'mysql_database.php',
+            'host'   => 'localhost',
+            'name'   => 'peter_cms',
+            'user'   => 'user',
+            'pass'   => 'secret',
+        ),
+        'test' => array(
+            'driver' => 'mysql_database.php',
+            'host'   => 'localhost',
+            'name'   => 'peter_test',
+            'user'   => 'user',
+            'pass'   => 'secret',
+        ),
+    );
 }
-
-?>

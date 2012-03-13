@@ -52,7 +52,7 @@ class database implements driverinterface {
 		
 		$this->is_new = false;
 
-		$this->connection = new mysqli($this->host, $this->username, $this->password);
+		$this->connection = new mysqli($this->host, $this->username, $this->password, $this->dbName);
 
 		if (mysqli_connect_error ())
 			throw new exception("Failed to connect to the database (" . mysqli_connect_errno() . ")");
@@ -236,7 +236,7 @@ class database implements driverinterface {
 	/**
 	 *  function execute: generic sql processor function, with wto if
 	 *  bad.
-	 *  @param string $sql The sql statement to run.
+	 *  @param string $file The file to execute.
 	 *  @param boolean $storeResults Whether or not to return the result of the SQL query
 	 *  @return boolean FALSE on error. If $storeResults, return the result set from $this->storeResults()
 	 *       upon success. Otherwise, return TRUE upon success.
@@ -244,13 +244,34 @@ class database implements driverinterface {
 	 *  calling interface, separating interface from logic and execution.
 	 *
 	 */
-	public function execute($sql, $storeResults=false) {
+	public function executeFile($file, $storeResults=false) {                
+                    
+               $dump_file = "mysql -h ". $this->host . " -u " . $this->username . " --password='" . $this->password . "'  " . $this->dbName . "<" . $file;
+               
+               $this->printer->write("executing statement:".$dump_file, 2);
+               
+               $output = array();
+               $return_var = 0;
+                              
+               exec($dump_file, $output, $return_var);
+               
+               if($return_var == 1)
+               {
+                   $this->hasError = true;
+               }
+               
+               return $return_var;               
+	}
+        
+        public function execute($sql, $storeResults=false) {
 		$this->printer->write("executing statement:", 2);
 		$this->printer->write($sql, 2);
-
-		// Execute the SQL statement(s)
+                
+                // Execute the SQL statement(s)
 		$this->connection->multi_query($sql);
-		if ($this->connection->error) {
+                                    
+                
+ 		if ($this->connection->error) {
 			$this->hasError = true;
 			$this->printer->write('SQL error: ' . $this->connection->error, 1);
 			$this->clearResults();
@@ -262,6 +283,7 @@ class database implements driverinterface {
 		$this->clearResults();
 		return true;
 	}
+
 
 
 	/**

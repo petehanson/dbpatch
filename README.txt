@@ -15,8 +15,50 @@ Dependencies:
  - For use with PostgreSQL:
     * PHP PostgreSQL extension installed and enabled
 
-Modify config.php to suit your needs. A short description of the configuration
+Modify config.php to suit your needs. A short description of the configuration 
 options follows:
+
+The config class should extend the DbPatch_Config_Master. For this to work,
+the config class must have a static $db property that should be an array and you 
+can specify 1+ databases this way. This is a static array with the key specifying 
+database and value as an array of connection options.
+
+   array(
+        'blog' => array(
+            'driver' => 'mysql_database.php',
+            'host'   => 'localhost',
+            'name'   => 'blog',
+            'user'   => 'user',
+            'pass'   => 'secret',
+        ),
+        'test' => array(
+            'driver' => 'mysql_database.php',
+            'host'   => 'localhost',
+            'name'   => 'test',
+            'user'   => 'user',
+            'pass'   => 'secret',
+        ),
+    );
+    
+ - driver:
+   Name of the database driver to use. For MySQL, use 'mysql_database.php'. For
+   PostgreSQL, use 'pgsql_database.php'.
+
+ - host:
+   Host of the database server. If the database is running on the same machine
+   as this script, use 'localhost'.
+
+ - name:
+   Name of the database to be versioned.
+
+ - user:
+   Username to connect to the database server with.
+
+ - pass:
+   Password associated with user.
+
+
+The following options have been deprecated:
 
  - $dbClassFile:
    Name of the database driver to use. For MySQL, use 'mysql_database.php'. For
@@ -51,6 +93,7 @@ options follows:
 
  - $standardized_timezone:
    Timezone used when recording dates of changes to the database.
+   
 
 
 USAGE
