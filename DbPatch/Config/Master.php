@@ -1,9 +1,9 @@
 <?php
 
 require_once 'DbPatch/Config/SingleDb.php';
-require_once 'configdb.php';
+require_once 'config.php';
 
-class DbPatch_Config_Master extends configdb
+class DbPatch_Config_Master extends config
 {
 
     /**
@@ -32,60 +32,6 @@ class DbPatch_Config_Master extends configdb
 
     public static $standardized_timezone = "UTC";
 
-    /**
-     * Property with all the database to connect to.
-     *
-     * <code>
-     * $db = array(
-     *   'blog' => array(
-     *       'driver' => 'mysql_database.php',
-     *       'host'   => 'localhost',
-     *       'name'   => 'my_blog',
-     *       'user'   => 'user',
-     *       'pass'   => 'secret',
-     *   ),
-     *   'cms' => array(
-     *       'driver' => 'mysql_database.php',
-     *       'host'   => 'localhost',
-     *       'name'   => 'my_cms',
-     *       'user'   => 'user',
-     *       'pass'   => 'secret',
-     *   ),
-     *   'test' => array(
-     *       'driver' => 'mysql_database.php',
-     *       'host'   => 'localhost',
-     *       'name'   => 'my_test_db',
-     *       'user'   => 'user',
-     *       'pass'   => 'secret',
-     *   ),
-     * );
-     * </code>
-     *
-     * @var array
-     */
-/*    public static $db = array(
-        'blog' => array(
-            'driver' => 'mysql_database.php',
-            'host'   => 'localhost',
-            'name'   => 'my_blog',
-            'user'   => 'str',
-            'pass'   => 'strpass',
-        ),
-        'cms' => array(
-            'driver' => 'mysql_database.php',
-            'host'   => 'localhost',
-            'name'   => 'my_cms',
-            'user'   => 'str',
-            'pass'   => 'strpass',
-        ),
-        'test' => array(
-            'driver' => 'mysql_database.php',
-            'host'   => 'localhost',
-            'name'   => 'my_test_db',
-            'user'   => 'str',
-            'pass'   => 'strpass',
-        ),
-    );*/
 
     public static function getSingleDbConfigs()
     {

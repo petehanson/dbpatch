@@ -30,10 +30,10 @@ ini_set('error_reporting', E_ALL & ~E_STRICT);
 
 require_once("Console/Getopt.php");
 
-require_once("config.php");
+require_once("db.php");
 require_once("app/dbversion.php");
 
-$masterConfig    = new config();
+$masterConfig    = new db();
 $singleDbConfigs = $masterConfig->getSingleDbConfigs();
 
 foreach($singleDbConfigs as $db) {
