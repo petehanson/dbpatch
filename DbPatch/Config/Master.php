@@ -1,8 +1,9 @@
 <?php
 
 require_once 'DbPatch/Config/SingleDb.php';
+require_once 'configdb.php';
 
-class DbPatch_Config_Master
+class DbPatch_Config_Master extends configdb
 {
 
     /**
@@ -62,7 +63,7 @@ class DbPatch_Config_Master
      *
      * @var array
      */
-    public static $db = array(
+/*    public static $db = array(
         'blog' => array(
             'driver' => 'mysql_database.php',
             'host'   => 'localhost',
@@ -84,13 +85,14 @@ class DbPatch_Config_Master
             'user'   => 'str',
             'pass'   => 'strpass',
         ),
-    );
+    );*/
 
     public static function getSingleDbConfigs()
     {
-        if (!count(static::$db)) throw new Exception('Database array not set or is empty in config file');
+
+         if (!count(self::$db)) throw new Exception('Database array not set or is empty in config file');
         $configs = array();
-        foreach (static::$db as $name => $data) {
+        foreach (self::$db as $name => $data) {
             $config = new DbPatch_Config_SingleDb();
             $config->dbClassFile = $data['driver'];
             $config->dbHost      = $data['host'];
