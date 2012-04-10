@@ -246,7 +246,7 @@ class database implements driverinterface {
 	 */
 	public function executeFile($file, $storeResults=false) {                
                     
-               $dump_file = "mysql -h ". $this->host . " -u " . $this->username . " --password='" . $this->password . "'  " . $this->dbName . "<" . $file;
+               $dump_file = "mysql -h ". $this->host . " -u " . $this->username . " --password=\"" . $this->password . "\"  " . $this->dbName . "<" . $file;
                
                $this->printer->write("executing statement:".$dump_file, 2);
                
