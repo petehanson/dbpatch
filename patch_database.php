@@ -18,7 +18,7 @@
  * variable $version documents the implementation level.
  *
  */
-$version = "0.30";
+$version = "0.31";
 
 /**
  * Set of files required to run the application
@@ -30,13 +30,17 @@ ini_set('error_reporting', E_ALL & ~E_STRICT);
 
 require_once("Console/Getopt.php");
 
-require_once("db.php");
-require_once("app/dbversion.php");
+require_once ("db.php");
+require_once ("app/dbversion.php");
+require_once ('trackers/TrackerInterface.php');
+require_once ('trackers/DbVersionTracker.php');
+require_once ('trackers/FileVersionTracker.php');
+require_once ('trackers/TrackerFactory.php');
 
-$masterConfig    = new db();
+$masterConfig = new db();
 $singleDbConfigs = $masterConfig->getSingleDbConfigs();
 
-foreach($singleDbConfigs as $db) {
+foreach ($singleDbConfigs as $db) {
     /* @var $db DbPatch_Config_SingleDb */
     require_once 'database_drivers/' . $db->dbClassFile;
 }
@@ -66,8 +70,7 @@ try {
     // two types of options, actions and modifiers
     // actions: help, list, add, record, patch, create
     // modifiers: verbose, quiet, skip (works only with patch)
-    $opts = Console_Getopt::getOpt($argv, "hqvlpa::s::S::r::c::",
-            array("help", "list", "verbose", "quiet", "add=",
+    $opts = Console_Getopt::getOpt($argv, "hqvlpa::s::S::r::c::", array("help", "list", "verbose", "quiet", "add=",
                 "skip=", "skip-and-record=", "record=", "create=", "patch"));
 
     //print_r($opts);
@@ -172,8 +175,8 @@ try {
 
 
 
-    foreach($singleDbConfigs as $config) {
-        $app = new dbversion($config, $printer,$base_folder);
+    foreach ($singleDbConfigs as $config) {
+        $app = new dbversion($config, $printer, $base_folder);
         if ($action != "help") {
             $printer->write("Action: {$action}", 2);
             $printer->write("Action Value: {$action_value}", 2);
@@ -181,11 +184,11 @@ try {
 
 
             /*
-            $printer->write("Base Path: {$basepath}");
-            $printer->write("Schema Path: {$schemapath}");
-            $printer->write("Data Path: {$datapath}");
-            *
-            */
+              $printer->write("Base Path: {$basepath}");
+              $printer->write("Schema Path: {$schemapath}");
+              $printer->write("Data Path: {$datapath}");
+             *
+             */
         }
 
         // lets process any skip values we get
@@ -199,7 +202,7 @@ try {
                 $app->apply_patches();
 
                 // Process any values from --skip-and-record
-                if($record_value !== null) {
+                if ($record_value !== null) {
                     $recordList = explode(",", $record_value);
                     $app->record_patches($recordList);
                 }
@@ -306,12 +309,12 @@ EOHELP;
     $proc = proc_open('less', array(
         0 => array('pipe', 'r'),
         2 => array('pipe', 'w')
-    ), $pipes);
-    if(is_resource($proc)) {
+            ), $pipes);
+    if (is_resource($proc)) {
         fwrite($pipes[0], $help);
         fclose($pipes[0]);
         $return = proc_close($proc);
-        if($return != 0) {
+        if ($return != 0) {
             echo $help;
         }
     } else {

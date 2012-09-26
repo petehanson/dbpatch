@@ -19,12 +19,14 @@
  */
 class dbversion {
     /*     * #@+
-    * @access private
-    *
-    */
+     * @access private
+     *
+     */
 
     protected $printer;
     protected $db;
+    protected $fileTracker;
+    protected $versionTracker;
     protected $base_folder;
     protected $basepath;
     protected $basefile;
@@ -34,65 +36,72 @@ class dbversion {
     protected $versionsToProcess;
     protected $skip_patches;
     protected $versionsToRecord;
-    protected $commentCharcters;
+    protected $commentCharacters;
+    protected $dbTrackPatchesInFile;
+    protected $dbStorePatchesInFile;
+    protected $dbDefaultPatchTrackingFile;
+
     /*     * #@- */
 
     /**
-    *
-    * constructor function
-    * @param string $patchFile
-    * @param DbPatch_Config_SingleDb $config
-    * @param printerbase $printer
-    * @todo Consider changing to take in the xml at this point to
-    * separate logic from interface, file processing to command line
-    * interface.
-    *
-    */
+     *
+     * constructor function
+     * @param string $patchFile
+     * @param DbPatch_Config_SingleDb $config
+     * @param printerbase $printer
+     * @todo Consider changing to take in the xml at this point to
+     * separate logic from interface, file processing to command line
+     * interface.
+     *
+     */
     public function __construct(DbPatch_Config_SingleDb $config, printerbase $printer, $base_folder) {
         $this->printer = $printer;
 
         $this->base_folder = realpath($base_folder);
         $this->basepath = realpath($base_folder . "/" . $config->basepath);
         $this->basefile = $config->basefile;
+        $this->dbTrackPatchesInFile = $config->dbTrackPatchesInFile;
+        $this->dbDefaultPatchTrackingFile = $config->dbDefaultPatchTrackingFile;
+        $this->dbStorePatchesInFile = false; //TODO: get from config
         $this->schemapath = realpath($base_folder . "/" . $config->schemapath);
         $this->datapath = realpath($base_folder . "/" . $config->datapath);
-        
-        /*
-        $printer->write("Base Path: {$this->basepath}");
-        $printer->write("Schema Path: {$this->schemapath}");
-        $printer->write("Data Path: {$this->datapath}");
-        */
 
         $this->versionsToProcess = null;
         $this->skip_patches = array();
         $this->versionsToRecord = null;
 
         $baseschema = realpath($this->basepath . "/" . $this->basefile);
-        $this->db = new database($config->dbHost, $config->dbName, $config->dbUsername, $config->dbPassword, $printer, $baseschema);
-        $this->db->checkForDBVersion();
+
+        // if we are going to bundle patches in a SQL file we don't need the database connection
+        if (!$this->dbStorePatchesInFile) {
+            $this->db = new database($config->dbHost, $config->dbName, $config->dbUsername, $config->dbPassword, $printer, $baseschema);
+        }
+
+        $this->versionTracker = Tracker_Factory::Create(
+                        $config->dbName, $printer, $this->base_folder, $this->dbTrackPatchesInFile, $this->db);
 
         date_default_timezone_set($config->standardized_timezone);
-        $this->commentCharcters = array('#', '-', '/');
+        $this->commentCharacters = array('#', '-', '/');
     }
 
     /**
-    *  destruct function - closes DB connection
-    *
-    */
+     *  destruct function - closes DB connection
+     *
+     */
     public function __destruct() {
         if ($this->db)
             $this->db->close();
     }
 
     /**
-    * needed_patches function:
-    * Get a list of the patches that need to be applied to the database (taking into account skipped/added
-    * patches). Returns an array('data'=>array(...), 'schema'=>array(...)), where data contains data patches
-    * and schema contains schema patches.
-    */
+     * needed_patches function:
+     * Get a list of the patches that need to be applied to the database (taking into account skipped/added
+     * patches). Returns an array('data'=>array(...), 'schema'=>array(...)), where data contains data patches
+     * and schema contains schema patches.
+     */
     protected function needed_patches() {
         // get list of applied patches from db
-        $applied_patches = $this->db->get_applied_patches();
+        $applied_patches = $this->versionTracker->get_applied_patches();
 
         // get list of patches on the file system
         $schema_patches = $this->get_patch_files($this->schemapath);
@@ -113,11 +122,11 @@ class dbversion {
     }
 
     /**
-    *  list_patches function: prints what patches need to be applied to the current working copy database.
-    *  Optionally takes a parameter $needed_patches, an array in the format output by $this->needed_patches()
-    *
-    */
-    public function list_patches($needed_patches=null) {
+     *  list_patches function: prints what patches need to be applied to the current working copy database.
+     *  Optionally takes a parameter $needed_patches, an array in the format output by $this->needed_patches()
+     *
+     */
+    public function list_patches($needed_patches = null) {
         // Get a list of the patches that need to be applied
         if ($needed_patches === null) {
             $needed_patches = $this->needed_patches();
@@ -164,9 +173,9 @@ class dbversion {
     }
 
     /**
-    *   apply_patches function:  executes the patching process
-    *
-    */
+     *   apply_patches function:  executes the patching process
+     *
+     */
     public function apply_patches() {
         $return_result = true;
 
@@ -192,27 +201,28 @@ class dbversion {
         } else {
             $this->printer->write("");
             $this->add_patches(array_merge($needed_schema_patches, $needed_data_patches));
-            /*$this->printer->write("Applying patches:");
-            // on each patch, apply it to the DB
-            foreach (array("schemapath" => $needed_schema_patches, "datapath" => $needed_data_patches) as $pathname => $needed_patches) {
 
-                foreach ($needed_patches as $patch) {
-                    // record the patch data into dbversion
-                    $fullpath = realpath($this->$pathname . "/" . $patch);
+            /* $this->printer->write("Applying patches:");
+              // on each patch, apply it to the DB
+              foreach (array("schemapath" => $needed_schema_patches, "datapath" => $needed_data_patches) as $pathname => $needed_patches) {
 
-                    $sql = $this->get_queries_from_file($fullpath);
-                    $this->db->execute($sql);
-                    if ($this->db->has_error()) {
-                        $this->printer->write("Error: {$fullpath}");
-                        $return_result = false;
-                        break;
-                    } else {
-                        $this->printer->write("Success: {$fullpath}");
-                        // save patch to dbversion
-                        $this->record_patches($patch);
-                    }
-                }
-            }*/
+              foreach ($needed_patches as $patch) {
+              // record the patch data into dbversion
+              $fullpath = realpath($this->$pathname . "/" . $patch);
+
+              $sql = $this->get_queries_from_file($fullpath);
+              $this->db->execute($sql);
+              if ($this->db->has_error()) {
+              $this->printer->write("Error: {$fullpath}");
+              $return_result = false;
+              break;
+              } else {
+              $this->printer->write("Success: {$fullpath}");
+              // save patch to dbversion
+              $this->record_patches($patch);
+              }
+              }
+              } */
         }
 
 
@@ -232,9 +242,9 @@ class dbversion {
     }
 
     /**
-    *  function record_patches: just records the patch data into the dbverions table
-    *
-    */
+     *  function record_patches: just records the patch data into the dbverions table
+     *
+     */
     public function record_patches($versionIDs) {
         if (!is_array($versionIDs))
             $versionIDs = array($versionIDs);
@@ -244,27 +254,27 @@ class dbversion {
         }
 
         /*
-        if ($this->db->doesTransactions()) {
-        if ($this->dryRun === true)
-        $this->db->failTransaction();
-        return $this->db->completeTransaction();
-        }
-        else {
-        return true;
-        }
-        *
-        */
+          if ($this->db->doesTransactions()) {
+          if ($this->dryRun === true)
+          $this->db->failTransaction();
+          return $this->db->completeTransaction();
+          }
+          else {
+          return true;
+          }
+         *
+         */
 
         return true;
     }
 
     /**
-    *  function add_patches:  Applies specific patches to the database
-    *
-    */
+     *  function add_patches:  Applies specific patches to the database
+     *
+     */
     public function add_patches($patches) {
         $paths = array();
-        $applied_patches = $this->db->get_applied_patches();
+        $applied_patches = $this->versionTracker->get_applied_patches();
         foreach ($patches as $patch) {
             //echo $patch."\n";
             if (in_array($patch, $applied_patches)) {
@@ -288,30 +298,35 @@ class dbversion {
             }
         }
         if (!empty($paths)) {
-            foreach ($paths as $file => $p) {
-                //$sql = $this->get_queries_from_file($p); //obsolete
-                $this->db->executeFile($p);
-                if ($this->db->has_error()) {
-                    $this->printer->write("Error: {$p}");
-                    $return_result = false;
-                    break;
-                } else {
-                    $this->printer->write("Success: {$p}");
-                    // save patch to dbversion
-                    $this->record_patches($file);
-                }
-            }
+            $this->executeFiles($paths);
         } else {
             $this->printer->write("No patch has been applied, all listed patches are either already applied or not found.");
         }
+    }
 
-        //$this->versionsToProcess = array_merge($this->versionsToProcess, $patches);
+    /*
+     * Execute files using appropriate DB Driver
+     */
+
+    private function executeFiles($filePaths) {
+        foreach ($filePaths as $file => $p) {
+            $this->db->executeFile($p);
+            if ($this->db->has_error()) {
+                $this->printer->write("Error: {$p}");
+                $return_result = false;
+                break;
+            } else {
+                $this->printer->write("Success: {$p}");
+                // save patch to dbversion
+                $this->record_patches($file);
+            }
+        }
     }
 
     /**
-    *  function skip_patches:  patches that should be skipped when patching
-    *
-    */
+     *  function skip_patches:  patches that should be skipped when patching
+     *
+     */
     public function skip_patches($patches) {
 
         // set up patches as an array if it isn't one
@@ -340,10 +355,10 @@ class dbversion {
     }
 
     /**
-    * Sets up a new patch file in the appropriate directory, based on patch type
-    *
-    * @param string $patch_type
-    */
+     * Sets up a new patch file in the appropriate directory, based on patch type
+     *
+     * @param string $patch_type
+     */
     public function create_patch($patch_type) {
 
         switch ($patch_type) {
@@ -382,23 +397,30 @@ class dbversion {
     }
 
     /**
-    *  function insertVersion: assuming all is ok up to now, attempt to
-    *  actually insert the version info into dbversion table.
-    *  @return boolean yea or nay on insert of version.
-    *
-    */
+     *  function insertVersion: assuming all is ok up to now, attempt to
+     *  actually insert the version info into dbversion store (file or sql).
+     *  @return boolean yea or nay on insert of version.
+     *
+     */
     protected function insertVersion($version) {
-        return $this->db->insertVersion($version, date('Y-m-d'));
+
+        // Item to be stored in the version store (file or SQL)
+        $versioningItem = array("item" =>
+            array("applied_patch" => $version,
+                "date_patch_applied" => date('Y-m-d')));
+
+        return $this->versionTracker->insert_new_version($versioningItem);
     }
 
     /**
-    * Extracts the queries from a given patch file
-    * @param $filepath - The full path of the patch file
-    * @return Array
-    */
+     * Extracts the queries from a given patch file
+     * @param $filepath - The full path of the patch file
+     * @return Array
+     */
     protected function get_queries_from_file($filepath) {
         return file_get_contents($filepath);
     }
+
 }
 
 ?>

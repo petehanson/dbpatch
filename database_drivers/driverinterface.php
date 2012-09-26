@@ -21,7 +21,7 @@ interface driverinterface
 	public function get_applied_patches();
 	public function executeFile($file);
 	public function has_error();
-	public function isNewDB();
+	//public function isNewDB();
 	public function insertVersion($id,$date);
 }
 
