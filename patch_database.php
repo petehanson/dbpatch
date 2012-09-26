@@ -32,6 +32,7 @@ require_once("Console/Getopt.php");
 
 require_once ("db.php");
 require_once ("app/dbversion.php");
+require_once ('app/PatchFileBundler.php');
 require_once ('trackers/TrackerInterface.php');
 require_once ('trackers/DbVersionTracker.php');
 require_once ('trackers/FileVersionTracker.php');
@@ -70,8 +71,8 @@ try {
     // two types of options, actions and modifiers
     // actions: help, list, add, record, patch, create
     // modifiers: verbose, quiet, skip (works only with patch)
-    $opts = Console_Getopt::getOpt($argv, "hqvlpa::s::S::r::c::", array("help", "list", "verbose", "quiet", "add=",
-                "skip=", "skip-and-record=", "record=", "create=", "patch"));
+    $opts = Console_Getopt::getOpt($argv, "hqvlpaf::s::S::r::c::", array("help", "list", "verbose", "quiet", "add=",
+                "skip=", "skip-and-record=", "record=", "create=", "patch", "produce-patch-file"));
 
     //print_r($opts);
 
@@ -145,6 +146,11 @@ try {
 
             if ($key == "p" || $key == "--patch") {
                 $action = "patch";
+                $actions_issued++;
+            }
+            
+            if ($key == "f" || $key == "--produce-patch-file") {
+                $action = "producefile";
                 $actions_issued++;
             }
         }
@@ -226,6 +232,10 @@ try {
                 $app->record_patches($recordList);
                 break;
 
+             case "producefile":
+                $app->apply_patches(true);
+                break;
+            
             case "help":
             default:
                 displayHelp();

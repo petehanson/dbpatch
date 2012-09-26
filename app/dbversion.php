@@ -25,6 +25,7 @@ class dbversion {
 
     protected $printer;
     protected $db;
+    protected $dbName;
     protected $fileTracker;
     protected $versionTracker;
     protected $base_folder;
@@ -39,7 +40,7 @@ class dbversion {
     protected $commentCharacters;
     protected $dbTrackPatchesInFile;
     protected $dbStorePatchesInFile;
-    protected $dbDefaultPatchTrackingFile;
+    protected $bundler;
 
     /*     * #@- */
 
@@ -61,14 +62,15 @@ class dbversion {
         $this->basepath = realpath($base_folder . "/" . $config->basepath);
         $this->basefile = $config->basefile;
         $this->dbTrackPatchesInFile = $config->dbTrackPatchesInFile;
-        $this->dbDefaultPatchTrackingFile = $config->dbDefaultPatchTrackingFile;
-        $this->dbStorePatchesInFile = false; //TODO: get from config
         $this->schemapath = realpath($base_folder . "/" . $config->schemapath);
         $this->datapath = realpath($base_folder . "/" . $config->datapath);
 
         $this->versionsToProcess = null;
         $this->skip_patches = array();
         $this->versionsToRecord = null;
+        $this->dbName = $config->dbName;
+
+        $this->bundler = new Patch_File_Bundler($this->dbName, $this->base_folder);
 
         $baseschema = realpath($this->basepath . "/" . $this->basefile);
 
@@ -176,7 +178,7 @@ class dbversion {
      *   apply_patches function:  executes the patching process
      *
      */
-    public function apply_patches() {
+    public function apply_patches($bundleInFile = false) {
         $return_result = true;
 
         // Get a list of the patches that need to be applied
@@ -200,7 +202,7 @@ class dbversion {
             $this->printer->write("No patches were applied.");
         } else {
             $this->printer->write("");
-            $this->add_patches(array_merge($needed_schema_patches, $needed_data_patches));
+            $this->add_patches(array_merge($needed_schema_patches, $needed_data_patches), $bundleInFile);
 
             /* $this->printer->write("Applying patches:");
               // on each patch, apply it to the DB
@@ -272,7 +274,7 @@ class dbversion {
      *  function add_patches:  Applies specific patches to the database
      *
      */
-    public function add_patches($patches) {
+    public function add_patches($patches, $bundleInFile = false) {
         $paths = array();
         $applied_patches = $this->versionTracker->get_applied_patches();
         foreach ($patches as $patch) {
@@ -298,7 +300,17 @@ class dbversion {
             }
         }
         if (!empty($paths)) {
-            $this->executeFiles($paths);
+            if ($bundleInFile) {
+                $succeeded = $this->bundler->bundleFilesToDefaultPatchFile($paths);
+                if ($succeeded) {
+                    foreach ($paths as $file => $p) {
+                         echo "recording.. \n";
+                         $this->record_patches($file);
+                    }
+                }
+            }
+            else
+                $this->executeFiles($paths);
         } else {
             $this->printer->write("No patch has been applied, all listed patches are either already applied or not found.");
         }
@@ -313,7 +325,6 @@ class dbversion {
             $this->db->executeFile($p);
             if ($this->db->has_error()) {
                 $this->printer->write("Error: {$p}");
-                $return_result = false;
                 break;
             } else {
                 $this->printer->write("Success: {$p}");

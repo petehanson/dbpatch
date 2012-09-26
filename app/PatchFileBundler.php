@@ -1,25 +1,32 @@
 <?php
 
 /**
- * Helper class used to generate patch file on file system
+ * The sole responsibility of this
+ * component is to generate a patch file on file system
  *
  */
 class Patch_File_Bundler {
     
-    protected $dbDefaultPatchTrackingFile;
+    protected $dbName;
+    protected $rootFolder;
     
-    /*
-     * Bundle files and store into a patch SQL file
+    public function __construct($dbName, $rootFolder) {
+        $this->dbName = $dbName;
+        $this->rootFolder = $rootFolder;
+    }
+    
+    /**
+     * Bundle files and store into a patch SQL file on disk
      */
-
-    private function bundleFilesToPatchFile($filePaths) {
-
+    public function bundleFilesToDefaultPatchFile($filePaths) {
+        $succeeded = false;
+        
         // Open file for writing
-        $openedFile = fopen($this->base_folder . "/" .
-                $this->dbDefaultPatchTrackingFile, "w"); 
+        $openedFile = fopen($this->rootFolder . "/" .
+                $this->dbName . "_patchfile.sql", "w"); 
 
         if (!$openedFile)
-            die("cannot open patch file");
+            die ("Could not open file to bundle resources! check your permissions.");
 
         try {
 
@@ -40,13 +47,18 @@ class Patch_File_Bundler {
             }
 
             fwrite($openedFile, "commit;");
+            
+            $succeeded = true;
+            
         } catch (Exception $e) {
             echo "{$e->getMessage()}\n";
+            $succeeded = false;
         }
 
         fclose($openedFile);
+        
+        return $succeeded;
     }
-
 }
 
 ?>

@@ -82,7 +82,10 @@ class File_Version_Tracker implements trackerinterface {
             $item->addChild('applied_patch', $tracking_item["item"]["applied_patch"]);
             $item->addChild('date_patch_applied', $tracking_item["item"]["date_patch_applied"]);
             
-            $xmlDoc->saveXML($this->versioningFilePath);
+            $succeded = $xmlDoc->saveXML($this->versioningFilePath);
+            
+            if (!$succeded)
+                die("\ncritical: cannot save version tracking XML! Check your permissions to write to disk!\n\n");
         }
         else
             die("critical: cannot store data to XML!");
