@@ -164,6 +164,22 @@ class database implements driverinterface
     {
 	return pg_last_error();
     }
+
+    public function executeFile($file) {
+        
+    }
+
+    public function get_applied_patches() {
+        
+    }
+
+    public function has_error() {
+        
+    }
+
+    public function ping_db() {
+        return !$this->connection;
+    }
     
 }
 

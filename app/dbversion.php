@@ -74,10 +74,8 @@ class dbversion {
 
         $baseschema = realpath($this->basepath . "/" . $this->basefile);
 
-        // if we are going to bundle patches in a SQL file we don't need the database connection
-        if (!$this->dbStorePatchesInFile) {
-            $this->db = new database($config->dbHost, $config->dbName, $config->dbUsername, $config->dbPassword, $printer, $baseschema);
-        }
+        $this->db = new database($config->dbHost, $config->dbName, $config->dbUsername, $config->dbPassword, $printer, $baseschema);
+        $this->db->checkForDBVersion();
 
         $this->versionTracker = Tracker_Factory::Create(
                         $config->dbName, $printer, $this->base_folder, $this->dbTrackPatchesInFile, $this->db);
@@ -304,8 +302,7 @@ class dbversion {
                 $succeeded = $this->bundler->bundleFilesToDefaultPatchFile($paths);
                 if ($succeeded) {
                     foreach ($paths as $file => $p) {
-                         echo "recording.. \n";
-                         $this->record_patches($file);
+                        $this->record_patches($file);
                     }
                 }
             }

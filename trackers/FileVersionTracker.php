@@ -13,10 +13,12 @@ class File_Version_Tracker implements trackerinterface {
     protected $baseFolder;
     protected $versioningFilePath;
     protected $hasError;
+    protected $db;
 
-    public function __construct($db, $baseFolder) {
-        $this->dbName = $db;
+    public function __construct($dbName, $baseFolder, $db) {
+        $this->dbName = $dbName;
         $this->baseFolder = $baseFolder;
+        $this->db = $db;
 
         $this->create_version_tracking_file();
     }
@@ -26,11 +28,11 @@ class File_Version_Tracker implements trackerinterface {
      * Every DB should have a separate tracking XML file.
      */
     private function create_version_tracking_file() {
-
         // This is the default path/name
         $this->versioningFilePath = $this->baseFolder . "/" . $this->dbName . "_trackingFile.xml";
 
         if (!file_exists($this->versioningFilePath)) {
+
             $createdFile = fopen($this->versioningFilePath, "c");
 
             if (!$createdFile)
@@ -38,7 +40,24 @@ class File_Version_Tracker implements trackerinterface {
             else {
                 fwrite($createdFile, '<?xml version="1.0" encoding="UTF-8" ?>');
                 fwrite($createdFile, '<items />');
-                fclose($createdFile);
+            }
+
+            fclose($createdFile);
+        }
+        
+        $appliedPatches = $this->get_applied_patches();
+        
+        if (isset($appliedPatches) && count($appliedPatches) == 0)
+        {
+            $connectionToDbAvailable = $this->db->ping_db();
+
+            // if connection to DB is avlb then move existing patches to file
+            if ($connectionToDbAvailable) {
+                $appliedPatches = $this->db->get_applied_patch_items();
+
+                foreach ($appliedPatches as $patchItem) {
+                    $this->insert_new_version($patchItem);
+                }
             }
         }
     }
@@ -76,14 +95,14 @@ class File_Version_Tracker implements trackerinterface {
         if ($versioningXml) {
             $xmlDoc = new SimpleXMLElement($versioningXml);
         }
-        
+
         if (isset($xmlDoc)) {
             $item = $xmlDoc->addChild('item');
             $item->addChild('applied_patch', $tracking_item["item"]["applied_patch"]);
             $item->addChild('date_patch_applied', $tracking_item["item"]["date_patch_applied"]);
-            
+
             $succeded = $xmlDoc->saveXML($this->versioningFilePath);
-            
+
             if (!$succeded)
                 die("\ncritical: cannot save version tracking XML! Check your permissions to write to disk!\n\n");
         }
