@@ -18,7 +18,7 @@ interface driverinterface
 {
 	public function checkForDBVersion();
 	public function close();
-	public function get_applied_patches();
+	public function get_applied_patch_names();
         public function get_applied_patch_items();
 	public function executeFile($file);
 	public function has_error();

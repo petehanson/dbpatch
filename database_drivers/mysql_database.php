@@ -171,11 +171,11 @@ class database implements driverinterface {
     }
 
     /**
-     * function get_applied_patches:  returns a 2 dimensional array of of patch data back to the client code
+     * function get_applied_patch_names:  returns a 2 dimensional array of of patch data back to the client code
      * Returns a list of applied patches.
      * @return array
      */
-    public function get_applied_patches() {
+    public function get_applied_patch_names() {
         $return_array = array();
         $sql = "select * from dbversion";
 
@@ -222,6 +222,12 @@ class database implements driverinterface {
         $sql = sprintf($versionInsertSQL, $this->connection->escape_string($id), $this->connection->escape_string($date));
 
         return $this->execute($sql);
+    }
+    
+    public function insertTrackingItem($tracking_item) {
+        $this->insertVersion(
+                $tracking_item["item"]["applied_patch"], 
+                $tracking_item["item"]["date_patch_applied"]);
     }
 
     /**

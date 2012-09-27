@@ -31,12 +31,11 @@ ini_set('error_reporting', E_ALL & ~E_STRICT);
 require_once("Console/Getopt.php");
 
 require_once ("db.php");
-require_once ("app/dbversion.php");
+require_once ("app/PatchEngine.php");
 require_once ('app/PatchFileBundler.php');
 require_once ('trackers/TrackerInterface.php');
-require_once ('trackers/DbVersionTracker.php');
-require_once ('trackers/FileVersionTracker.php');
-require_once ('trackers/TrackerFactory.php');
+require_once ('trackers/XmlFileVersionTracker.php');
+require_once ('trackers/FileTrackerFactory.php');
 
 $masterConfig = new db();
 $singleDbConfigs = $masterConfig->getSingleDbConfigs();
@@ -182,7 +181,7 @@ try {
 
 
     foreach ($singleDbConfigs as $config) {
-        $app = new dbversion($config, $printer, $base_folder);
+        $app = new Patch_Engine($config, $printer, $base_folder);
         if ($action != "help") {
             $printer->write("Action: {$action}", 2);
             $printer->write("Action Value: {$action_value}", 2);

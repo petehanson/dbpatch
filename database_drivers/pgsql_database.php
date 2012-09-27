@@ -169,7 +169,7 @@ class database implements driverinterface
         
     }
 
-    public function get_applied_patches() {
+    public function get_applied_patch_names() {
         
     }
 
