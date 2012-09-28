@@ -28,7 +28,7 @@ class config
             'name'   => 'my_blog',
             'user'   => 'cake',
             'pass'   => 'letthemeat',
-	    'track_patches_in_file'   => true,
+	    'track_patches_in_file'   => false,
         ), 
         'cms' => array(
             'driver' => 'mysql_database.php',

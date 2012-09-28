@@ -320,6 +320,8 @@ class Patch_Engine {
                     foreach ($paths as $file => $p) {
                         $this->record_patches($file);
                     }
+                    
+                     $this->printer->write("\nPatches were bundled successfully to .sql files\n");
                 }
             }
             else

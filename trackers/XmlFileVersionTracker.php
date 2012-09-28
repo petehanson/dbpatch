@@ -74,16 +74,27 @@ class Xml_File_Version_Tracker implements trackerinterface {
     }
     
     /**
-     * Get applied patches 
-     * @return type 
+     * Get applied patches
+     * @return associative array of patch items
      */
     public function get_applied_patches() {
         $xml = file_get_contents($this->versioningFilePath);
 
         if ($xml) {
+            
             $element = new SimpleXMLElement($xml);
+            $items = array();
+            
+            foreach ($element->item as $item) {
+                
+                 $trackingItem = array("item" =>
+            array("applied_patch" => $item->applied_patch,
+                "date_patch_applied" => $item->date_patch_applied));
+                 
+                 $items[] = $trackingItem;
+            }
 
-            return $element->xpath("/items/item/applied_patch");
+            return $items;
         }
         else
             echo "Could not get versioning file contents!";
