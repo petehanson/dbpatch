@@ -37,6 +37,8 @@ class Patch_Engine {
     protected $dbTrackPatchesInFile;
     protected $dbStorePatchesInFile;
     protected $bundler;
+    protected $root_level_commands;
+    protected $prompt_for_root_user;
 
     /*     * #@- */
 
@@ -65,6 +67,8 @@ class Patch_Engine {
         $this->skip_patches = array();
         $this->versionsToRecord = null;
         $this->dbName = $config->dbName;
+        $this->root_level_commands = $config->root_level_commands;
+        $this->prompt_for_root_user = $config->prompt_for_root_user;
 
         $this->bundler = new Patch_File_Bundler($this->dbName, $this->base_folder);
 
@@ -72,17 +76,15 @@ class Patch_Engine {
 
         $this->db = new database($config->dbHost, $config->dbName, $config->dbUsername, $config->dbPassword, $printer, $baseschema);
         $this->db->checkForDBVersion();
-        
+
         $appliedDbPatchItems = $this->db->get_applied_patch_items();
 
         $this->fileVersionTracker = File_Tracker_Factory::Create(
-                        $config->dbName, $printer, $this->base_folder, 
-                $this->dbTrackPatchesInFile ? $appliedDbPatchItems : array());
+                        $config->dbName, $printer, $this->base_folder, $this->dbTrackPatchesInFile ? $appliedDbPatchItems : array());
 
-        if (!$this->dbTrackPatchesInFile && count($appliedDbPatchItems) == 0)
-        {
+        if (!$this->dbTrackPatchesInFile && count($appliedDbPatchItems) == 0) {
             $appliedPatchesFromFile = $this->fileVersionTracker->get_applied_patches();
-            
+
             foreach ($appliedPatchesFromFile as $itemFromFile) {
                 $this->db->insertTrackingItem($itemFromFile);
             }
@@ -320,8 +322,8 @@ class Patch_Engine {
                     foreach ($paths as $file => $p) {
                         $this->record_patches($file);
                     }
-                    
-                     $this->printer->write("\nPatches were bundled successfully to .sql files\n");
+
+                    $this->printer->write("\nPatches were bundled successfully to .sql files\n");
                 }
             }
             else
@@ -336,15 +338,48 @@ class Patch_Engine {
      */
 
     private function executeFiles($filePaths) {
-        foreach ($filePaths as $file => $p) {
-            $this->db->executeFile($p);
+        foreach ($filePaths as $file => $path) {
+            if ($this->prompt_for_root_user) {
+                $this->check_file_for_root_statements($path);
+            }
+
+            $this->db->executeFile($path);
             if ($this->db->has_error()) {
-                $this->printer->write("Error: {$p}");
+                $this->printer->write("Error: {$path}");
                 break;
             } else {
-                $this->printer->write("Success: {$p}");
+                $this->printer->write("Success: {$path}");
                 // save patch to dbversion
                 $this->record_patches($file);
+            }
+        }
+    }
+
+    /**
+     * Check .SQL file for root required statements and ask for mysql root credentials
+     * if needed. 
+     */
+    private function check_file_for_root_statements($filePath) {
+        $fileContents = file_get_contents($filePath);
+
+        if ($fileContents) {
+            // verify if any of the root level commands (e.g. GRANT) is contained in the file
+            foreach ($this->root_level_commands as $root_level_command) {
+                if (preg_match("/" . $root_level_command . "/i", $fileContents)) {
+
+                    $hasPrivilege = $this->db->userHasPrivilege($root_level_command);
+
+                    // If current user doesn't have the privilege required ask for a root user
+                    if (isset($hasPrivilege) && !$hasPrivilege) {
+                        $this->printer->write("\nDetected root level statements in patch files. Please enter a MySQL root user credentials:\n");
+                        $username = $this->printer->askWithRetriesIfEmpty("Username: ", 2);
+                        $password = $this->printer->askWithRetriesIfEmpty("Password: ", 2);
+
+                        $this->db->change_user($username, $password);
+
+                        break;
+                    }
+                }
             }
         }
     }

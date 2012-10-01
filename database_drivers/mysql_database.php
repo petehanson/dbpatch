@@ -33,6 +33,8 @@ class database implements driverinterface {
     protected $ddl_rollback;
     protected $is_new;
     protected $dbExists;
+    protected $baseFile;
+    protected $dbInformationSchema;
 
     /**
      *   __construct function, describes environment and sets up connection.
@@ -41,8 +43,10 @@ class database implements driverinterface {
     public function __construct($host, $db, $username, $password, printer $printer, $basefile = null) {
         $this->host = $host;
         $this->dbName = $db;
+        $this->dbInformationSchema = "information_schema";
         $this->username = $username;
         $this->password = $password;
+        $this->baseFile = $basefile;
 
         $this->printer = $printer;
 
@@ -52,6 +56,13 @@ class database implements driverinterface {
 
         $this->is_new = false;
 
+        $this->connect_and_initialize();
+    }
+
+    /**
+     * Connect and initialize db
+     */
+    private function connect_and_initialize() {
         $this->connection = new mysqli($this->host, $this->username, $this->password, $this->dbName);
 
         if (mysqli_connect_error())
@@ -60,12 +71,23 @@ class database implements driverinterface {
         // Try to select the database, creating it and applying the base schema if it doesn't exist
         $this->dbExists = true;
         if ($this->connection->select_db($this->dbName) === false) {
-            if ($basefile === null) {
+            if ($this->baseFile === null) {
                 $this->executeBase();
             } else {
-                $this->executeBase(file_get_contents($basefile));
+                $this->executeBase(file_get_contents($this->baseFile));
             }
         }
+    }
+
+    /**
+     * Change user of database connection
+     * @return true or false
+     */
+    public function change_user($username, $password) {
+        $this->username = $username;
+        $this->password = $password;
+
+        $this->connect_and_initialize();
     }
 
     /**
@@ -147,6 +169,26 @@ class database implements driverinterface {
             $this->execute($sql);
         }
     }
+    
+    /**
+     * Check if user has a privilege
+     * @param String $privilegeName
+     * @return true or false 
+     */
+    public function userHasPrivilege($privilegeName) {
+        // Temporary select information_schema db
+        $this->connection->select_db($this->dbInformationSchema);
+        
+        $sql = "SELECT * FROM `USER_PRIVILEGES` WHERE `GRANTEE` like '%" . 
+                $this->username ."%' and `PRIVILEGE_TYPE` = '$privilegeName'";
+        
+        $rowExists = $this->rowExists($sql);
+        
+        // re-select regular DB
+        $this->connection->select_db($this->dbName);
+        
+        return $rowExists;
+    }
 
     /**
      * function rowExists: generic test for existing rows in table.
@@ -154,6 +196,7 @@ class database implements driverinterface {
      */
     protected function rowExists($sql) {
         $result = $this->execute($sql, true);
+        
         if (is_array($result)) {
             return false;
         }
@@ -203,7 +246,7 @@ class database implements driverinterface {
 
                 $versioningItem = array("item" =>
                     array("applied_patch" => $row['applied_patch'],
-                        "date_patch_applied" =>  $row['date_patch_applied']));
+                        "date_patch_applied" => $row['date_patch_applied']));
 
                 $return_array[] = $versioningItem;
             }
@@ -223,11 +266,10 @@ class database implements driverinterface {
 
         return $this->execute($sql);
     }
-    
+
     public function insertTrackingItem($tracking_item) {
         $this->insertVersion(
-                $tracking_item["item"]["applied_patch"], 
-                $tracking_item["item"]["date_patch_applied"]);
+                $tracking_item["item"]["applied_patch"], $tracking_item["item"]["date_patch_applied"]);
     }
 
     /**

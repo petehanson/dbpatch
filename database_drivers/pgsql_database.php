@@ -51,6 +51,14 @@ class database implements driverinterface
 	if ($this->connection === false) throw new exception("Failed to connect to the database");
 	//if (mysql_select_db($this->dbName) === false) throw new exception("Failed to connect to the database {$this->dbName}");
     }
+    
+    /**
+     * Change user of current opened connection 
+     * @return true or false
+     */
+    public function change_user($username, $password) {
+        //TODO: implement
+    }
 
     public function close()
     {

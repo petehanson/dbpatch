@@ -20,6 +20,7 @@ interface driverinterface
 	public function close();
 	public function get_applied_patch_names();
         public function get_applied_patch_items();
+        public function change_user($username, $password);
 	public function executeFile($file);
 	public function has_error();
         public function ping_db();

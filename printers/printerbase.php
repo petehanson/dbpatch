@@ -18,26 +18,45 @@
  */
 abstract class printerbase {
 
-	protected $printLevel;
+    protected $printLevel;
 
-	public function __construct($level = 1) {
-		$this->printLevel = $level;
-	}
+    public function __construct($level = 1) {
+        $this->printLevel = $level;
+    }
 
-	public function write($string, $level = 1) {
-		if ($level <= $this->printLevel) {
-			$this->doWrite($string);
-		}
-	}
+    public function write($string, $level = 1) {
+        if ($level <= $this->printLevel) {
+            $this->doWrite($string);
+        }
+    }
 
-	abstract public function doWrite($string);
+    abstract public function doWrite($string);
 
-	public function ask($question) {
-		$this->write($question, 0);
-		$answer = trim(fgets(STDIN));
+    public function ask($question) {
+        $this->write($question, 0);
+        $answer = trim(fgets(STDIN));
 
-		return $answer;
-	}
+        return $answer;
+    }
+
+    public function askWithRetriesIfEmpty($question, $retries) {
+
+        $answer = "";
+
+        $tryNumber = 0;
+
+        while ($tryNumber <= $retries) {
+            $this->write($question, 0);
+            $answer = trim(fgets(STDIN));
+
+            if (strlen($answer) != 0)
+                break;
+            
+            $tryNumber++;
+        }
+
+        return $answer;
+    }
 
 }
 
