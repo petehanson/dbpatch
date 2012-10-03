@@ -30,12 +30,13 @@ class Patch_File_Bundler {
 
         try {
 
-            fwrite($openedFile, "start transaction;");
+            fwrite($openedFile, "start transaction;\n");
 
             foreach ($filePaths as $file => $path) {
                 if (isset($path)) {
                     $sqlFileToRead = fopen($path, "r");
                     if (isset($path)) {
+                       fwrite($openedFile, "\n");
                         while (!feof($sqlFileToRead))
                             fwrite($openedFile, fgets($sqlFileToRead));
                     } else {
@@ -46,7 +47,7 @@ class Patch_File_Bundler {
                 }
             }
 
-            fwrite($openedFile, "commit;");
+            fwrite($openedFile, "\ncommit;");
             
             $succeeded = true;
             

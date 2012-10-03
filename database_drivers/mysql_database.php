@@ -62,19 +62,23 @@ class database implements driverinterface {
     /**
      * Connect and initialize db
      */
-    private function connect_and_initialize() {
-        $this->connection = new mysqli($this->host, $this->username, $this->password, $this->dbName);
+    private function connect_and_initialize($suppressDbCreation = false) {
+        $this->connection = new mysqli($this->host, $this->username, $this->password, null);
 
         if (mysqli_connect_error())
             throw new exception("Failed to connect to the database (" . mysqli_connect_errno() . ")");
 
+
         // Try to select the database, creating it and applying the base schema if it doesn't exist
         $this->dbExists = true;
         if ($this->connection->select_db($this->dbName) === false) {
-            if ($this->baseFile === null) {
-                $this->executeBase();
-            } else {
-                $this->executeBase(file_get_contents($this->baseFile));
+
+            if (!$suppressDbCreation) {
+                if ($this->baseFile === null) {
+                    $this->executeBase();
+                } else {
+                    $this->executeBase(file_get_contents($this->baseFile));
+                }
             }
         }
     }
@@ -87,7 +91,7 @@ class database implements driverinterface {
         $this->username = $username;
         $this->password = $password;
 
-        $this->connect_and_initialize();
+        $this->connect_and_initialize(true);
     }
 
     /**
@@ -169,7 +173,7 @@ class database implements driverinterface {
             $this->execute($sql);
         }
     }
-    
+
     /**
      * Check if user has a privilege
      * @param String $privilegeName
@@ -178,15 +182,15 @@ class database implements driverinterface {
     public function userHasPrivilege($privilegeName) {
         // Temporary select information_schema db
         $this->connection->select_db($this->dbInformationSchema);
-        
-        $sql = "SELECT * FROM `USER_PRIVILEGES` WHERE `GRANTEE` like '%" . 
-                $this->username ."%' and `PRIVILEGE_TYPE` = '$privilegeName'";
-        
+
+        $sql = "SELECT * FROM `USER_PRIVILEGES` WHERE `GRANTEE` like '%" .
+                $this->username . "%' and `PRIVILEGE_TYPE` = '$privilegeName'";
+
         $rowExists = $this->rowExists($sql);
-        
+
         // re-select regular DB
         $this->connection->select_db($this->dbName);
-        
+
         return $rowExists;
     }
 
@@ -196,7 +200,7 @@ class database implements driverinterface {
      */
     protected function rowExists($sql) {
         $result = $this->execute($sql, true);
-        
+
         if (is_array($result)) {
             return false;
         }
@@ -381,16 +385,62 @@ class database implements driverinterface {
     protected function createDatabase() {
         $answer = $this->printer->ask("Database {$this->dbName} does not exist. Want to create the database right now? (y/n)");
         if ($answer == 'y') {
-            if ($this->connection->query("CREATE DATABASE `{$this->dbName}`")) {
-                $this->printer->write("Database created");
-                $this->is_new = true;
-                $this->dbExists = true;
-                if ($this->connection->select_db($this->dbName) === false) {
-                    $this->dbExists = false;
-                    throw new exception("Failed to connect to the database {$this->dbName}");
+            $configuredUser = $this->username;
+            $configuredPassword = $this->password;
+            $hasPrivilege = $this->userHasPrivilege("CREATE");
+
+            // If current user doesn't have the privilege required ask for a root user
+            if (isset($hasPrivilege) && !$hasPrivilege) {
+
+                $tryNumber = 0;
+
+                // try getting the correct user with "create" privilege up to 3 times
+                while ($tryNumber <= 3 && !$hasPrivilege) {
+
+                    $this->printer->write("\nUser $this->username does not have 'CREATE' privilege. Please enter a MySQL root user credentials:\n");
+                    $username = $this->printer->askWithRetriesIfEmpty("Username: ", 2);
+                    $password = $this->printer->askWithRetriesIfEmpty("Password: ", 2);
+
+                    $this->change_user($username, $password);
+
+                    $hasPrivilege = $this->userHasPrivilege("CREATE");
+
+                    $tryNumber++;
+                }
+            }
+
+            if ($hasPrivilege) {
+                if ($this->connection->query("CREATE DATABASE `{$this->dbName}`")) {
+                    $this->printer->write("Database created");
+                    $this->is_new = true;
+                    $this->dbExists = true;
+                    
+                    // escape underscores if the db name contains them
+                    // this is needed for grant to work correctly
+                    $grantPermissionsToConfigUserQuery = "GRANT ALL PRIVILEGES ON `" . 
+                            str_replace('_', '\_', $this->dbName)  . "`.* to '" .
+                                    $configuredUser . "'@'localhost' IDENTIFIED BY '" . $configuredPassword . "';";
+ 
+                    if ($this->connection->query($grantPermissionsToConfigUserQuery)) {
+                        
+                        $this->connection->query("FLUSH PRIVILEGES;");
+                        
+                        $this->printer->write("All privileges granted to user $configuredUser");
+                    }
+                    else
+                    {
+                         throw new exception("Error granting all permissions to $configuredUser user");
+                    }
+                    
+                    if ($this->connection->select_db($this->dbName) === false) {
+                        $this->dbExists = false;
+                        throw new exception("Failed to connect to the database {$this->dbName}");
+                    }
+                } else {
+                    throw new exception("Error creating database: " . $this->connection->error);
                 }
             } else {
-                throw new exception("Error creating database: " . $this->connection->error);
+                throw new exception("Error creating DB. The user configured does not have privilege to create a DB");
             }
         } elseif ($answer == 'n') {
             $this->printer->write("The database was not created. Process aborted.");

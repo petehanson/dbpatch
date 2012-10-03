@@ -26,10 +26,10 @@ class config
             'driver' => 'mysql_database.php',
             'host'   => 'localhost',
             'name'   => 'my_blog',
-            'user'   => 'cake',
-            'pass'   => 'letthemeat',
+            'user'   => 'nonadmin',
+            'pass'   => 'nonadmin',
 	    'track_patches_in_file'   => false,
-        ), 
+        ), /*
         'cms' => array(
             'driver' => 'mysql_database.php',
             'host'   => 'localhost',

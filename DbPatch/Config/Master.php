@@ -43,7 +43,7 @@ class DbPatch_Config_Master extends config {
      * @var array 
      */
     public static $root_level_commands = 
-            array( "EVENT", "TRIGGER", "DROP DATABASE", "RELOAD", 
+            array( "EVENT", "TRIGGER", "DROP DATABASE",  
                 "SHUTDOWN", "FILE", "GRANT", "CREATE USER", "REVOKE" );
 
     public static function getSingleDbConfigs() {
