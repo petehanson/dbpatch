@@ -22,14 +22,14 @@ class config
      * @var array
      */
     public static $db = array(
-         'blog' => array(
+        /* 'blog' => array(
             'driver' => 'mysql_database.php',
             'host'   => 'localhost',
             'name'   => 'my_blog',
-            'user'   => 'nonadmin',
-            'pass'   => 'nonadmin',
+            'user'   => 'cake',
+            'pass'   => 'letthemeat',
 	    'track_patches_in_file'   => false,
-        ), /*
+        ), /* */
         'cms' => array(
             'driver' => 'mysql_database.php',
             'host'   => 'localhost',
