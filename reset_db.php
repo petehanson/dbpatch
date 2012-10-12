@@ -40,9 +40,11 @@ foreach ($singleDbConfigs as $config) {
     if ($db->has_error()) die('error');
 
     // reinit so it reselects the database
+    // and prompts to re-create
     unset($app);
     $app = new Patch_Engine($config, $printer, DBPATCH_BASE_PATH);
 
+    /*
     // import base sql
     $output = array();
     $basePath = DBPATCH_BASE_PATH . '/' . $config->basepath . $config->basefile;
@@ -56,6 +58,7 @@ foreach ($singleDbConfigs as $config) {
     }
     echo implode(PHP_EOL, $output);
     if ($retval != 0) die();
+     */
 
     // import patches
     $app->apply_patches();
