@@ -213,7 +213,10 @@ class Patch_Engine {
             $this->printer->write("No patches were applied.");
         } else {
             $this->printer->write("");
-            $this->add_patches(array_merge($needed_schema_patches, $needed_data_patches), $bundleInFile);
+            $inorder = array_merge($needed_schema_patches, $needed_data_patches);
+            sort($inorder);
+            $this->add_patches($inorder);
+            //$this->add_patches(array_merge($needed_schema_patches, $needed_data_patches), $bundleInFile);
 
             /* $this->printer->write("Applying patches:");
               // on each patch, apply it to the DB
