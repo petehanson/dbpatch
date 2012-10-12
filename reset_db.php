@@ -45,7 +45,7 @@ foreach ($singleDbConfigs as $config) {
 
     // import base sql
     $output = array();
-    $basePath = DBPATCH_BASE_PATH . $config->basepath . '/' . $config->basefile;
+    $basePath = DBPATCH_BASE_PATH . '/' . $config->basepath . $config->basefile;
     $cmd = 'mysql -h ' . $config->dbHost . ' -u ' . $config->dbUsername . ' --password="' . $config->dbPassword . '" ' . $config->dbName . ' < ' . $basePath;
     $retval = null;
     exec($cmd, $output, $retval);
