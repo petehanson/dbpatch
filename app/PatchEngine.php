@@ -360,7 +360,7 @@ class Patch_Engine {
 
     /**
      * Check .SQL file for root required statements and ask for mysql root credentials
-     * if needed. 
+     * if needed.
      */
     private function check_file_for_root_statements($filePath) {
         $fileContents = file_get_contents($filePath);
@@ -487,6 +487,10 @@ class Patch_Engine {
         return file_get_contents($filepath);
     }
 
+    public function getDb()
+	{
+		return $this->db;
+	}
 }
 
 ?>
