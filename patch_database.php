@@ -28,32 +28,45 @@ $version = "0.31";
 
 ini_set('error_reporting', E_ALL & ~E_STRICT);
 
+// if we weren't supplied a wrapper from an include, define our own path
+// use this path everywhere
+if (!defined('DBPATCH_BASE_PATH')) define('DBPATCH_BASE_PATH', dirname(__FILE__));
+
+// require from global path
 require_once("Console/Getopt.php");
 
-require_once ("db.php");
-require_once ("app/PatchEngine.php");
-require_once ('app/PatchFileBundler.php');
-require_once ('trackers/TrackerInterface.php');
-require_once ('trackers/XmlFileVersionTracker.php');
-require_once ('trackers/FileTrackerFactory.php');
+// get overridden db class
+require_once (DBPATCH_BASE_PATH  . "/db.php");
+
+// pull in the rest of the engine
+require_once (dirname(__FILE__) . "/app/PatchEngine.php");
+require_once (dirname(__FILE__) . '/app/PatchFileBundler.php');
+require_once (dirname(__FILE__) . '/trackers/TrackerInterface.php');
+require_once (dirname(__FILE__) . '/trackers/XmlFileVersionTracker.php');
+require_once (dirname(__FILE__) . '/trackers/FileTrackerFactory.php');
 
 $masterConfig = new db();
 $singleDbConfigs = $masterConfig->getSingleDbConfigs();
 
 foreach ($singleDbConfigs as $db) {
     /* @var $db DbPatch_Config_SingleDb */
-    require_once 'database_drivers/' . $db->dbClassFile;
+    require_once(dirname(__FILE__) . '/database_drivers/' . $db->dbClassFile);
 }
 
-require_once("printers/cli.php");
+require_once(dirname(__FILE__) . "/printers/cli.php");
 
 /**
  * pathToScript is the execution directory
  *
  */
+/*
 $pathToScript = dirname($_SERVER['SCRIPT_FILENAME']);
 
 chdir($pathToScript);
+ */
+
+// chdir to the base path
+chdir(DBPATCH_BASE_PATH);
 
 /**
  *  Following here is the execution loop itself.
@@ -147,14 +160,13 @@ try {
                 $action = "patch";
                 $actions_issued++;
             }
-            
+
             if ($key == "f" || $key == "--produce-patch-file") {
                 $action = "producefile";
                 $actions_issued++;
             }
         }
     }
-
 
     if ($actions_issued == 0) {
         echo "{$argv[0]} needs to be called with an action parameter.\n";
@@ -168,20 +180,11 @@ try {
         exit;
     }
 
-
-
-
     // set up the printer
     $printer = new printer($printLevel);
 
-
-    // construct file paths
-    $base_folder = dirname(__FILE__);
-
-
-
     foreach ($singleDbConfigs as $config) {
-        $app = new Patch_Engine($config, $printer, $base_folder);
+        $app = new Patch_Engine($config, $printer, DBPATCH_BASE_PATH);
         if ($action != "help") {
             $printer->write("Action: {$action}", 2);
             $printer->write("Action Value: {$action_value}", 2);
@@ -234,7 +237,7 @@ try {
              case "producefile":
                 $app->apply_patches(true);
                 break;
-            
+
             case "help":
             default:
                 displayHelp();

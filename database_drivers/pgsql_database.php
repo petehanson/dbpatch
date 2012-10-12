@@ -1,7 +1,7 @@
 <?php
-/**        
+/**
  *  class database (for postgres)
- * 
+ *
  * @package pgsql_database.php
  * @ignore
  *
@@ -10,10 +10,11 @@
  * requiring driverinterface.php
  *
  */
-require_once("driverinterface.php");
+require_once(dirname(__FILE__) . "/driverinterface.php");
+
 /**
  * class database (for postgres dbms)
- * 
+ *
  * @package pgsql_database.php
  * @ignore
  *
@@ -51,9 +52,9 @@ class database implements driverinterface
 	if ($this->connection === false) throw new exception("Failed to connect to the database");
 	//if (mysql_select_db($this->dbName) === false) throw new exception("Failed to connect to the database {$this->dbName}");
     }
-    
+
     /**
-     * Change user of current opened connection 
+     * Change user of current opened connection
      * @return true or false
      */
     public function change_user($username, $password) {
@@ -77,7 +78,7 @@ class database implements driverinterface
 	{
 		$this->hasError = false;
 		$this->inTransaction = true;
-		$sql = "BEGIN"; 
+		$sql = "BEGIN";
 		$this->execute($sql);
 	}
     }
@@ -140,7 +141,7 @@ class database implements driverinterface
     public function checkVersion($versionID)
     {
 	$versionSQL = "select * from dbversion where db_version_id = '%s'";
-	$sql = sprintf($versionSQL,pg_escape_string($versionID));	
+	$sql = sprintf($versionSQL,pg_escape_string($versionID));
 
 	if ($this->rowExists($sql))
 	{
@@ -174,21 +175,29 @@ class database implements driverinterface
     }
 
     public function executeFile($file) {
-        
+
     }
 
     public function get_applied_patch_names() {
-        
+
+    }
+
+    /**
+     * Get applied patch items from DB
+     * @return associative array of patch items
+     */
+    public function get_applied_patch_items() {
+
     }
 
     public function has_error() {
-        
+
     }
 
     public function ping_db() {
         return !$this->connection;
     }
-    
+
 }
 
 ?>

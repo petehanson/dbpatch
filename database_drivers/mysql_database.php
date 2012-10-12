@@ -2,7 +2,7 @@
 
 /**
  *  class database, for mysql processing.
- * 
+ *
  *  @package class mysql_database
  *
  */
@@ -10,15 +10,15 @@
  *  requiring driverinterface.php
  *
  */
-require_once("driverinterface.php");
-require_once("lib/sql.php");
+require_once(dirname(__FILE__) . "/driverinterface.php");
+require_once(dirname(__FILE__) . "/../lib/sql.php");
 
 /**
  *   class database, for mysql processing.
- * 
+ *
  * @package mysql_database
- *      
- *    
+ *
+ *
  */
 class database implements driverinterface {
 
@@ -177,7 +177,7 @@ class database implements driverinterface {
     /**
      * Check if user has a privilege
      * @param String $privilegeName
-     * @return true or false 
+     * @return true or false
      */
     public function userHasPrivilege($privilegeName) {
         // Temporary select information_schema db
@@ -414,24 +414,24 @@ class database implements driverinterface {
                     $this->printer->write("Database created");
                     $this->is_new = true;
                     $this->dbExists = true;
-                    
+
                     // escape underscores if the db name contains them
                     // this is needed for grant to work correctly
-                    $grantPermissionsToConfigUserQuery = "GRANT ALL PRIVILEGES ON `" . 
+                    $grantPermissionsToConfigUserQuery = "GRANT ALL PRIVILEGES ON `" .
                             str_replace('_', '\_', $this->dbName)  . "`.* to '" .
                                     $configuredUser . "'@'localhost' IDENTIFIED BY '" . $configuredPassword . "';";
- 
+
                     if ($this->connection->query($grantPermissionsToConfigUserQuery)) {
-                        
+
                         $this->connection->query("FLUSH PRIVILEGES;");
-                        
+
                         $this->printer->write("All privileges granted to user $configuredUser");
                     }
                     else
                     {
                          throw new exception("Error granting all permissions to $configuredUser user");
                     }
-                    
+
                     if ($this->connection->select_db($this->dbName) === false) {
                         $this->dbExists = false;
                         throw new exception("Failed to connect to the database {$this->dbName}");

@@ -1,7 +1,9 @@
 <?php
 
-require_once 'DbPatch/Config/SingleDb.php';
-require_once 'config.php';
+// get SingleDb from this dir
+require_once(dirname(__FILE__) . '/SingleDb.php');
+// get config.php from the base path
+require_once(DBPATCH_BASE_PATH . '/config.php');
 
 class DbPatch_Config_Master extends config {
 
@@ -28,22 +30,22 @@ class DbPatch_Config_Master extends config {
      * @deprecated
      */
     public static $datapath = "sql/data/";
-    
+
     public static $standardized_timezone = "UTC";
-    
+
     /**
      * Flag to prompt for root user credentials if a patch being executed
      * contains root level statements
-     * @var boolean 
+     * @var boolean
      */
     public static $prompt_for_root_user = false;
-    
+
     /**
      * List of commands that require root level mysql permissions
-     * @var array 
+     * @var array
      */
-    public static $root_level_commands = 
-            array( "EVENT", "TRIGGER", "DROP DATABASE",  
+    public static $root_level_commands =
+            array( "EVENT", "TRIGGER", "DROP DATABASE",
                 "SHUTDOWN", "FILE", "GRANT", "CREATE USER", "REVOKE" );
 
     public static function getSingleDbConfigs() {
