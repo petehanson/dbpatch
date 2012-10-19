@@ -44,13 +44,21 @@ require_once (dirname(__FILE__) . '/app/PatchFileBundler.php');
 require_once (dirname(__FILE__) . '/trackers/TrackerInterface.php');
 require_once (dirname(__FILE__) . '/trackers/XmlFileVersionTracker.php');
 require_once (dirname(__FILE__) . '/trackers/FileTrackerFactory.php');
+require_once (dirname(__FILE__) . '/database_drivers/DriverFactory.php');
 
 $masterConfig = new db();
 $singleDbConfigs = $masterConfig->getSingleDbConfigs();
 
 foreach ($singleDbConfigs as $db) {
     /* @var $db DbPatch_Config_SingleDb */
-    require_once(dirname(__FILE__) . '/database_drivers/' . $db->dbClassFile);
+    
+    if (isset($db->dbType))
+    {
+        require_once(dirname(__FILE__) . '/database_drivers/' . $db->dbType . '_database.php');
+    }
+    else
+        require_once(dirname(__FILE__) . '/database_drivers/' . $db->dbClassFile);
+    
 }
 
 require_once(dirname(__FILE__) . "/printers/cli.php");

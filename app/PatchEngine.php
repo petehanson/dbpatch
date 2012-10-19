@@ -29,6 +29,7 @@ class Patch_Engine {
     protected $basefile;
     protected $schemapath;
     protected $datapath;
+    protected $dbType;
     //protected $dryRun;
     protected $versionsToProcess;
     protected $skip_patches;
@@ -69,12 +70,15 @@ class Patch_Engine {
         $this->dbName = $config->dbName;
         $this->root_level_commands = $config->root_level_commands;
         $this->prompt_for_root_user = $config->prompt_for_root_user;
+        $this->dbType = $config->dbType;
 
         $this->bundler = new Patch_File_Bundler($this->dbName, $this->base_folder);
 
         $baseschema = realpath($this->basepath . "/" . $this->basefile);
 
-        $this->db = new database($config->dbHost, $config->dbName, $config->dbUsername, $config->dbPassword, $printer, $baseschema);
+        $this->db = Driver_Factory::Create($this->dbType, $config->dbHost, $config->dbName, $config->dbUsername, 
+                $config->dbPassword, $printer, $baseschema);
+        
         $this->db->checkForDBVersion();
 
         $appliedDbPatchItems = $this->db->get_applied_patch_items();

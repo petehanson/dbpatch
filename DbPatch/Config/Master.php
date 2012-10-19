@@ -55,7 +55,11 @@ class DbPatch_Config_Master extends config {
         $configs = array();
         foreach (self::$db as $name => $data) {
             $config = new DbPatch_Config_SingleDb();
-            $config->dbClassFile = $data['driver'];
+            
+            if (isset($data['driver']))
+                $config->dbClassFile = $data['driver'];
+            
+            $config->dbType = $data['databasetype'];
             $config->dbHost = $data['host'];
             $config->dbName = $data['name'];
             $config->dbUsername = $data['user'];

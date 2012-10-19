@@ -8,6 +8,7 @@ class DbPatch_Config_SingleDb
     public $dbUsername;
     public $dbPassword;
     public $dbTrackPatchesInFile;
+    public $dbType;
 
     public $basefile;
     public $basepath;

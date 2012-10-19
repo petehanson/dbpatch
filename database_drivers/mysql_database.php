@@ -20,7 +20,7 @@ require_once(dirname(__FILE__) . "/../lib/sql.php");
  *
  *
  */
-class database implements driverinterface {
+class mysql_database implements driverinterface {
 
     protected $host;
     protected $dbName;
@@ -67,7 +67,6 @@ class database implements driverinterface {
 
         if (mysqli_connect_error())
             throw new exception("Failed to connect to the database (" . mysqli_connect_errno() . ")");
-
 
         // Try to select the database, creating it and applying the base schema if it doesn't exist
         $this->dbExists = true;
