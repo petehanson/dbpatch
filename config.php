@@ -30,7 +30,7 @@ class config
             'user'   => 'cake',
             'pass'   => 'letthemeat',
 	    'track_patches_in_file'   => false,
-        ),
+        ),*/
         'cms' => array(
             //'driver' => 'mysql_database.php',
             'databasetype' => 'mysql',
@@ -39,8 +39,8 @@ class config
             'user'   => 'cake',
             'pass'   => 'letthemeat',
 	    'track_patches_in_file'   => false,
-        ),*/
-        'postgremovies' => array(
+        ),
+         /*'postgremovies' => array(
             //'driver' => 'mysql_database.php',
             'databasetype' => 'pgsql',
             'host'   => 'localhost',
@@ -48,7 +48,7 @@ class config
             'user'   => 'dbpatchnonadmin',
             'pass'   => 'dbpatchnonadmin',
 	    'track_patches_in_file'   => false,
-        ),
+        ),*/
        /*  'test' => array(
             'driver' => 'mysql_database.php',
             'databasetype' => 'mysql',

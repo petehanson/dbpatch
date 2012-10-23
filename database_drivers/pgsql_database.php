@@ -249,6 +249,7 @@ class pg_database implements driverinterface {
 
     public function close() {
         pg_close($this->connection);
+        $this->connection = null;
     }
 
     public function doesTransactions() {
@@ -287,12 +288,19 @@ class pg_database implements driverinterface {
     }
 
     public function checkForDBVersion() {
-        $sql = "SELECT c.relname as \"Name\" FROM pg_catalog.pg_class c LEFT JOIN pg_catalog.pg_user u ON u.usesysid = c.relowner LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace WHERE c.relkind IN ('r','v','S','') AND n.nspname NOT IN ('pg_catalog', 'pg_toast') AND pg_catalog.pg_table_is_visible(c.oid) and c.relname like 'dbversion'";
+        try {
+            $sql = "SELECT c.relname as \"Name\" FROM pg_catalog.pg_class c LEFT JOIN pg_catalog.pg_user u ON u.usesysid = c.relowner LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace WHERE c.relkind IN ('r','v','S','') AND n.nspname NOT IN ('pg_catalog', 'pg_toast') AND pg_catalog.pg_table_is_visible(c.oid) and c.relname like 'dbversion'";
 
-        $result = $this->rowExists($sql);
-        if ($result == false) {
-            $sql = "CREATE TABLE dbversion ( applied_patch varchar(255) NOT NULL, date_patch_applied date)";
-            $this->execute($sql);
+            $result = $this->rowExists($sql);
+            if ($result == false) {
+                $sql = "CREATE TABLE dbversion ( applied_patch varchar(255) NOT NULL, date_patch_applied date)";
+                $this->execute($sql);
+            }
+
+            return true;
+        } catch (Exception $exc) {
+            $this->printer->write("Error: " . $exc->getMessage());
+            return false;
         }
     }
 
@@ -425,7 +433,7 @@ class pg_database implements driverinterface {
     }
 
     public function ping_db() {
-        return !$this->connection;
+        return $this->connection != FALSE;
     }
 
 }

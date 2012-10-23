@@ -24,7 +24,6 @@ interface driverinterface
 	public function executeFile($file);
 	public function has_error();
         public function ping_db();
-	//public function isNewDB();
 	public function insertVersion($id,$date);
 }
 
