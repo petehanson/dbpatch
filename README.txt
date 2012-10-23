@@ -4,6 +4,16 @@ ABOUT
 patch_database.php is a versioning tool for databases. It currently supports
 MySQL and PostgreSQL.
 
+As of October, 2012, it is now possible to add dbpatch as a git module and use it unmodified.
+The basic procedure is in your project to:
+  git module add username@dev.upandrunningsoftware.com:/data/git/dbpatch.git
+  mkdir sql
+  cd sql
+  cp ../dbpatch/*.tpl .
+  then rename the tpl files to .php and set up as appropriate following comments in the wrappers
+    db.php can usually be left untouched
+  The rest of the instructions below still apply, just in the sql directory rather than the dbpatch module directory
+
 
 INSTALLING/CONFIGURATION
 ------------------------
