@@ -23,7 +23,8 @@ class config
      */
     public static $db = array(
         /* 'blog' => array(
-            'driver' => 'mysql_database.php',
+            //'driver' => 'mysql_database.php',
+            'databasetype' => 'mysql',
             'host'   => 'localhost',
             'name'   => 'my_blog',
             'user'   => 'cake',
@@ -31,7 +32,8 @@ class config
 	    'track_patches_in_file'   => false,
         ), /* */
         'cms' => array(
-            'driver' => 'mysql_database.php',
+            //'driver' => 'mysql_database.php',
+            'databasetype' => 'mysql',
             'host'   => 'localhost',
             'name'   => 'cms',
             'user'   => 'cake',
@@ -39,7 +41,8 @@ class config
 	    'track_patches_in_file'   => false,
         ),
        /*  'test' => array(
-            'driver' => 'mysql_database.php',
+            //'driver' => 'mysql_database.php',
+            'databasetype' => 'mysql',
             'host'   => 'localhost',
             'name'   => 'peter_test',
             'user'   => 'user',

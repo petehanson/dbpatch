@@ -13,11 +13,12 @@ class Driver_Factory {
         {
             return new mysql_database($dbHost, $dbName, 
                 $dbUsername, $dbPassword, $printer, $baseSchema);
-        }
-        if ($dbType == "pgsql")
-        {
+
+        } else if ($dbType == "pgsql") {
             return new pg_database($dbHost, $dbName, 
                 $dbUsername, $dbPassword, $printer, $baseSchema);
+        } else {
+            throw new Exception('unhandled database type: ' . $dbType);
         }
     }
 
