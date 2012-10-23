@@ -10,7 +10,12 @@ The basic procedure is in your project to:
   mkdir sql
   cd sql
   cp ../dbpatch/*.tpl .
-  then rename the tpl files to .php and set up as appropriate following comments in the wrappers
+  mv config.php.tpl config.php
+  mv db.php.tpl db.php
+  mv patch_wrapper.php.tpl patch_database.php
+  mv reset_db_wrapper.php.tpl reset_db.php
+
+  then set up as appropriate following comments in the wrappers and instructions below.
     db.php can usually be left untouched
   The rest of the instructions below still apply, just in the sql directory rather than the dbpatch module directory
 
