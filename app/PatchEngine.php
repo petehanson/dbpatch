@@ -1,4 +1,5 @@
 <?php
+require_once(dirname(__FILE__) . '/../database_drivers/DriverFactory.php');
 
 /**
  *   @package PatchEngine.php
