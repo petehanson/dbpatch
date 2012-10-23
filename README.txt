@@ -6,7 +6,7 @@ MySQL and PostgreSQL.
 
 As of October, 2012, it is now possible to add dbpatch as a git module and use it unmodified.
 The basic procedure is in your project to:
-  git module add username@dev.upandrunningsoftware.com:/data/git/dbpatch.git
+  git submodule add username@dev.upandrunningsoftware.com:/data/git/dbpatch.git
   mkdir sql
   cd sql
   cp ../dbpatch/*.tpl .
