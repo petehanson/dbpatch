@@ -19,6 +19,14 @@ The basic procedure is in your project to:
     db.php can usually be left untouched
   The rest of the instructions below still apply, just in the sql directory rather than the dbpatch module directory
 
+  Other notes on using as a git submodule:
+    When checking out the project with dbpatch as a module with version 1.6.5 of Git and later, you can use:
+      git clone --recursive {git URI}
+
+    If you didn't use --recursive or the dbpatch submodule directory is empty, you may need to
+      git submodule update --init
+
+
 
 INSTALLING/CONFIGURATION
 ------------------------
