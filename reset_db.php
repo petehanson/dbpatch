@@ -33,7 +33,10 @@ $printLevel = 1; // used with quiet and verbose
 $printer = new printer($printLevel);
 
 foreach ($singleDbConfigs as $config) {
-    $app = new Patch_Engine($config, $printer, DBPATCH_BASE_PATH, true);
+    // for MySQL, we need to use the MySQL client to avoid problems with DELIMITER, etc.
+    $CreateHere = ($config->dbType == 'mysql');
+
+    $app = new Patch_Engine($config, $printer, DBPATCH_BASE_PATH, $CreateHere);
     // get db connection
     $db = $app->getDb();
 
@@ -41,29 +44,34 @@ foreach ($singleDbConfigs as $config) {
     echo "Dropping database '" . $config->dbName . "'" . PHP_EOL;
     $db->execute('DROP DATABASE IF EXISTS `' . $config->dbName . '`');
     if ($db->has_error()) die('error');
-    echo "Creating database '" . $config->dbName . "'" . PHP_EOL;
-    $db->execute('CREATE DATABASE `' . $config->dbName . '`');
-    if ($db->has_error()) die('error');
 
-    // import base sql manually
-    $basepath = realpath(DBPATCH_BASE_PATH . "/" . $config->basepath);
-    $baseschema = realpath($basepath . "/" . $config->basefile);
-    echo "Importing database '" . $config->dbName . "' from '" . $baseschema . "'" . PHP_EOL;
-    $output = array();
-    $cmd = 'mysql -h ' . $config->dbHost . ' -u ' . $config->dbUsername . ' --password="' . $config->dbPassword . '" ' . $config->dbName . ' < ' . $baseschema;
-    $retval = null;
-    exec($cmd, $output, $retval);
-    if ($retval != 0) {
-        echo 'failed to import base sql' . PHP_EOL;
-    } else {
-        echo 'database imported successfully' . PHP_EOL;
+    if ($CreateHere) {
+      echo "Creating database '" . $config->dbName . "'" . PHP_EOL;
+      $db->execute('CREATE DATABASE `' . $config->dbName . '`');
+      if ($db->has_error()) die('error');
+
+      // import base sql manually
+      $basepath = realpath(DBPATCH_BASE_PATH . "/" . $config->basepath);
+      $baseschema = realpath($basepath . "/" . $config->basefile);
+      echo "Importing database '" . $config->dbName . "' from '" . $baseschema . "' using MySQL client" . PHP_EOL;
+      $output = array();
+      $cmd = 'mysql -h ' . $config->dbHost . ' -u ' . $config->dbUsername . ' --password="' . $config->dbPassword . '" ' . $config->dbName . ' < ' . $baseschema;
+      $retval = null;
+      exec($cmd, $output, $retval);
+      if ($retval != 0) {
+          echo 'failed to import base sql' . PHP_EOL;
+      } else {
+          echo 'database imported successfully' . PHP_EOL;
+      }
+      echo implode(PHP_EOL, $output);
+      if ($retval != 0) die();
     }
-    echo implode(PHP_EOL, $output);
-    if ($retval != 0) die();
 
     // reinit so it reselects the database
+    // and creates if necessary
     unset($app);
-    $app = new Patch_Engine($config, $printer, DBPATCH_BASE_PATH);
+    $app = new Patch_Engine($config, $printer, DBPATCH_BASE_PATH, false);
+
     // import patches
     $app->apply_patches();
 
