@@ -9,6 +9,7 @@ class DbPatch_Config_SingleDb
     public $dbPassword;
     public $dbTrackPatchesInFile;
     public $dbType;
+    public $use_cli_client_for_reset = false;
 
     public $basefile;
     public $basepath;

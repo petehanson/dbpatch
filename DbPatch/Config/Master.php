@@ -65,6 +65,7 @@ class DbPatch_Config_Master extends config {
             $config->dbUsername = $data['user'];
             $config->dbPassword = $data['pass'];
             $config->dbTrackPatchesInFile = $data['track_patches_in_file'];
+            $config->use_cli_client_for_reset = array_key_exists('use_cli_client_for_reset', $data) ? $data['use_cli_client_for_reset'] : false;
 
             $config->basepath = $name . '/' . self::$basepath;
             $config->schemapath = $name . '/' . self::$schemapath;

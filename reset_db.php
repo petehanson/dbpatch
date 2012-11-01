@@ -34,7 +34,7 @@ $printer = new printer($printLevel);
 
 foreach ($singleDbConfigs as $config) {
     // for MySQL, we need to use the MySQL client to avoid problems with DELIMITER, etc.
-    $CreateHere = ($config->dbType == 'mysql');
+    $CreateHere = ($config->use_cli_client_for_reset && ($config->dbType == 'mysql'));
 
     $app = new Patch_Engine($config, $printer, DBPATCH_BASE_PATH, $CreateHere);
     // get db connection

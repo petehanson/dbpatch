@@ -30,6 +30,7 @@ class config
             'user'   => 'cake',
             'pass'   => 'letthemeat',
 	    'track_patches_in_file'   => false,
+            'use_mysql_for_reset' => false // true if base needs mysql client
         ),*/
         'cms' => array(
             //'driver' => 'mysql_database.php',
@@ -39,6 +40,7 @@ class config
             'user'   => 'cake',
             'pass'   => 'letthemeat',
 	    'track_patches_in_file'   => false,
+            'use_cli_client_for_reset' => false // true if base needs mysql client
         ),
          /*'postgremovies' => array(
             //'driver' => 'mysql_database.php',
@@ -48,6 +50,7 @@ class config
             'user'   => 'dbpatchnonadmin',
             'pass'   => 'dbpatchnonadmin',
 	    'track_patches_in_file'   => false,
+            'use_cli_client_for_reset' => false
         ),*/
        /*  'test' => array(
             'driver' => 'mysql_database.php',
@@ -56,6 +59,7 @@ class config
             'name'   => 'peter_test',
             'user'   => 'user',
             'pass'   => 'secret',
+            'use_cli_client_for_reset' => false // true if base needs mysql client
         ),*/
     );
 }
