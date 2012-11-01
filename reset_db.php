@@ -33,26 +33,24 @@ $printLevel = 1; // used with quiet and verbose
 $printer = new printer($printLevel);
 
 foreach ($singleDbConfigs as $config) {
-    $app = new Patch_Engine($config, $printer, DBPATCH_BASE_PATH);
-
+    $app = new Patch_Engine($config, $printer, DBPATCH_BASE_PATH, true);
     // get db connection
     $db = $app->getDb();
 
     // reset database
-    echo "Dropping database " . $config->dbName . PHP_EOL;
-    $db->execute('DROP DATABASE `' . $config->dbName . '`');
+    echo "Dropping database '" . $config->dbName . "'" . PHP_EOL;
+    $db->execute('DROP DATABASE IF EXISTS `' . $config->dbName . '`');
+    if ($db->has_error()) die('error');
+    echo "Creating database '" . $config->dbName . "'" . PHP_EOL;
+    $db->execute('CREATE DATABASE `' . $config->dbName . '`');
     if ($db->has_error()) die('error');
 
-    // reinit so it reselects the database
-    // and prompts to re-create
-    unset($app);
-    $app = new Patch_Engine($config, $printer, DBPATCH_BASE_PATH);
-
-    /*
-    // import base sql
+    // import base sql manually
+    $basepath = realpath(DBPATCH_BASE_PATH . "/" . $config->basepath);
+    $baseschema = realpath($basepath . "/" . $config->basefile);
+    echo "Importing database '" . $config->dbName . "' from '" . $baseschema . "'" . PHP_EOL;
     $output = array();
-    $basePath = DBPATCH_BASE_PATH . '/' . $config->basepath . $config->basefile;
-    $cmd = 'mysql -h ' . $config->dbHost . ' -u ' . $config->dbUsername . ' --password="' . $config->dbPassword . '" ' . $config->dbName . ' < ' . $basePath;
+    $cmd = 'mysql -h ' . $config->dbHost . ' -u ' . $config->dbUsername . ' --password="' . $config->dbPassword . '" ' . $config->dbName . ' < ' . $baseschema;
     $retval = null;
     exec($cmd, $output, $retval);
     if ($retval != 0) {
@@ -62,8 +60,10 @@ foreach ($singleDbConfigs as $config) {
     }
     echo implode(PHP_EOL, $output);
     if ($retval != 0) die();
-     */
 
+    // reinit so it reselects the database
+    unset($app);
+    $app = new Patch_Engine($config, $printer, DBPATCH_BASE_PATH);
     // import patches
     $app->apply_patches();
 

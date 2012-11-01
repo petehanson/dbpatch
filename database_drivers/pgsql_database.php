@@ -34,7 +34,7 @@ class pg_database implements driverinterface {
     protected $inTransaction;
     protected $baseFile;
 
-    public function __construct($host, $db, $username, $password, printer $printer, $basefile = null) {
+    public function __construct($host, $db, $username, $password, printer $printer, $basefile = null, $suppressDbCreation = false) {
         $this->host = $host;
         $this->dbName = $db;
         $this->username = $username;
@@ -46,7 +46,7 @@ class pg_database implements driverinterface {
         $this->hasError = false;
         $this->inTransaction = false;
 
-        $this->connect_and_initialize();
+        $this->connect_and_initialize($suppressDbCreation);
 
         if ($this->connection === false)
             throw new exception("Failed to connect to the database");

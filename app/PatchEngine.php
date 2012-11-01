@@ -55,7 +55,7 @@ class Patch_Engine {
      * interface.
      *
      */
-    public function __construct(DbPatch_Config_SingleDb $config, printerbase $printer, $base_folder) {
+    public function __construct(DbPatch_Config_SingleDb $config, printerbase $printer, $base_folder, $suppressDbCreation = false) {
         $this->printer = $printer;
 
         $this->base_folder = realpath($base_folder);
@@ -78,7 +78,7 @@ class Patch_Engine {
         $baseschema = realpath($this->basepath . "/" . $this->basefile);
 
         $this->db = Driver_Factory::Create($this->dbType, $config->dbHost, $config->dbName, $config->dbUsername, 
-                $config->dbPassword, $printer, $baseschema);
+                $config->dbPassword, $printer, $baseschema, $suppressDbCreation);
         
         $this->db->checkForDBVersion();
 

@@ -40,7 +40,7 @@ class mysql_database implements driverinterface {
      *   __construct function, describes environment and sets up connection.
      *
      */
-    public function __construct($host, $db, $username, $password, printer $printer, $basefile = null) {
+    public function __construct($host, $db, $username, $password, printer $printer, $basefile = null, $suppressDbCreation = false) {
         $this->host = $host;
         $this->dbName = $db;
         $this->dbInformationSchema = "information_schema";
@@ -56,7 +56,7 @@ class mysql_database implements driverinterface {
 
         $this->is_new = false;
 
-        $this->connect_and_initialize();
+        $this->connect_and_initialize($suppressDbCreation);
     }
 
     /**
