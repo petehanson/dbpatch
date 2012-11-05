@@ -485,6 +485,16 @@ class mysql_database implements driverinterface {
         return $this->dbName;
     }
 
+    public function getConnection()
+    {
+        return $this->connection;
+    }
+
+    public function clearError()
+    {
+        $this->hasError = false;
+    }
+
     public function ping_db() {
         return $this->connection->ping();
     }

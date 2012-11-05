@@ -39,11 +39,12 @@ foreach ($singleDbConfigs as $config) {
     $app = new Patch_Engine($config, $printer, DBPATCH_BASE_PATH, $CreateHere);
     // get db connection
     $db = $app->getDb();
+    $db->clearError();
 
     // reset database
     echo "Dropping database '" . $config->dbName . "'" . PHP_EOL;
     $db->execute('DROP DATABASE IF EXISTS `' . $config->dbName . '`');
-    if ($db->has_error()) die('error');
+    if ($db->has_error()) die('error: ' . $db->getConnection()->error);
 
     if ($CreateHere) {
       echo "Creating database '" . $config->dbName . "'" . PHP_EOL;

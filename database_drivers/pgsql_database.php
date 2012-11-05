@@ -432,6 +432,16 @@ class pg_database implements driverinterface {
         return $this->hasError;
     }
 
+    public function getConnection()
+    {
+        return $this->connection;
+    }
+
+    public function clearError()
+    {
+        $this->hasError = false;
+    }
+
     public function ping_db() {
         return $this->connection != FALSE;
     }
