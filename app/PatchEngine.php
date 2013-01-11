@@ -445,11 +445,15 @@ class Patch_Engine {
 
         $this->printer->write("Setting patch prefix: {$timestamp_prefix}", 2);
 
-        $answer = $this->printer->ask("Provide a description for the patch:");
+        $answer = $this->printer->ask("Provide a description for new patch to `" . $this->dbName . "`");
 
         // normalize answer string, only using alphanum
         $normalized_answer = preg_replace("/\s/", "_", $answer);
         $normalized_answer = preg_replace("/[^\w]/", "", $normalized_answer);
+	if (empty($answer)) {
+        	$this->printer->write("  Skipping.");
+		return;
+	}
 
         // set the file name
         $patch_file_name = "{$timestamp_prefix}_{$normalized_answer}.sql";
