@@ -77,9 +77,9 @@ class Patch_Engine {
 
         $baseschema = realpath($this->basepath . "/" . $this->basefile);
 
-        $this->db = Driver_Factory::Create($this->dbType, $config->dbHost, $config->dbName, $config->dbUsername, 
+        $this->db = Driver_Factory::Create($this->dbType, $config->dbHost, $config->dbName, $config->dbUsername,
                 $config->dbPassword, $printer, $baseschema, $suppressDbCreation);
-        
+
         $this->db->checkForDBVersion();
 
         $appliedDbPatchItems = $this->db->get_applied_patch_items();
@@ -248,6 +248,111 @@ class Patch_Engine {
 
 
         return $return_result;
+    }
+
+    public function merge_patches($patch_type, $unlinkAfter = true)
+    {
+        switch ($patch_type) {
+            case "schema":
+                $path = $this->schemapath;
+                break;
+            case "data":
+                $path = $this->datapath;
+                break;
+            default:
+                throw new exception("An invalid patch type was provided.");
+        }
+
+        // get list of patches on the file system
+        // before we do anything
+        $schema_patches = $this->get_patch_files($this->schemapath);
+        $data_patches = $this->get_patch_files($this->datapath);
+
+        // now sort patches into correct order by timestamp prefix (filename)
+        sort($schema_patches);
+        sort($data_patches);
+
+        // merge into full chronological order
+        $inorder = array_merge($schema_patches, $data_patches);
+        sort($inorder);
+
+        if (empty($inorder)) {
+            $this->printer->write('  No patches to merge, skipping.');
+            return;
+        }
+
+
+        $timestamp_prefix = date("Ymd_His");
+        $this->printer->write("Setting patch prefix: {$timestamp_prefix}", 2);
+        $answer = $this->printer->ask("Provide a description for merged patch to `" . $this->dbName . "`");
+
+        // normalize answer string, only using alphanum
+        $normalized_answer = preg_replace("/\s/", "_", $answer);
+        $normalized_answer = preg_replace("/[^\w]/", "", $normalized_answer);
+        if (empty($answer)) {
+        	$this->printer->write("  Skipping.");
+            return;
+        }
+        // set the file name
+        $patch_file_name = "{$timestamp_prefix}_{$normalized_answer}.sql";
+
+        $this->printer->write("Patch file name: {$patch_file_name}", 2);
+
+        $fullpath = $path . "/" . $patch_file_name;
+
+        if (file_exists($fullpath)) {
+            throw new exception("destination file {$fullpath} already exists");
+        }
+
+        // lets create the file
+        if (!touch($fullpath)) {
+            throw new exception("Unable to create the file {$fullpath}");
+        }
+
+        $this->printer->write("Patch file created; {$fullpath}");
+
+
+        $paths = array();
+        foreach($inorder as $patch_file)
+        {
+            if (file_exists($this->schemapath . '/' . $patch_file)) {
+                if (file_exists($this->datapath . '/' . $patch_file)) {
+                    // file exists in both folders. Abort operation
+                    $this->printer->write("Aborting process: File {$patch_file} exists in both {$this->schemapath} and {$this->datapath} folders.");
+                    die;
+                }
+                $paths[$patch_file] = $this->schemapath . '/' . $patch_file;
+            } elseif (file_exists($this->datapath . '/' . $patch_file)) {
+                $paths[$patch_file] = $this->datapath . '/' . $patch_file;
+            } else {
+                $this->printer->write("Aborting process: File {$patch_file} not found");
+                die;
+            }
+
+            $this->printer->write('Merging patch: ' . $patch_file);
+
+            // append each patch into dest file
+            $contents = file_get_contents($paths[$patch_file]);
+            if ($contents === false) {
+                throw new exception('Unable to read patch file: ' . $paths[$patch_file]);
+            }
+
+            $written = file_put_contents($fullpath, $contents, FILE_APPEND);
+            if (!$written) {
+                throw new exception('Unable to append patch file: ' . $patch_file );
+            }
+        }
+
+        // delete if requested
+        if ($unlinkAfter) {
+            foreach($inorder as $patch_file)
+            {
+                $this->printer->write('Deleting patch: ' . $patch_file);
+                @unlink($paths[$patch_file]);
+            }
+        }
+
+        return true;
     }
 
     protected function get_patch_files($path) {

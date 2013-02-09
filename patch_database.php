@@ -51,14 +51,14 @@ $singleDbConfigs = $masterConfig->getSingleDbConfigs();
 
 foreach ($singleDbConfigs as $db) {
     /* @var $db DbPatch_Config_SingleDb */
-    
+
     if (isset($db->dbType))
     {
         require_once(dirname(__FILE__) . '/database_drivers/' . $db->dbType . '_database.php');
     }
     else
         require_once(dirname(__FILE__) . '/database_drivers/' . $db->dbClassFile);
-    
+
 }
 
 require_once(dirname(__FILE__) . "/printers/cli.php");
@@ -91,8 +91,8 @@ try {
     // two types of options, actions and modifiers
     // actions: help, list, add, record, patch, create
     // modifiers: verbose, quiet, skip (works only with patch)
-    $opts = Console_Getopt::getOpt($argv, "hqvlpaf::s::S::r::c::", array("help", "list", "verbose", "quiet", "add=",
-                "skip=", "skip-and-record=", "record=", "create=", "patch", "produce-patch-file"));
+    $opts = Console_Getopt::getOpt($argv, "hqvlpaf::s::S::r::c::m::", array("help", "list", "verbose", "quiet", "add=",
+                "skip=", "skip-and-record=", "record=", "create=", "merge=", "patch", "produce-patch-file"));
 
     //print_r($opts);
 
@@ -160,6 +160,12 @@ try {
 
             if ($key == "c" || $key == "--create") {
                 $action = "create";
+                $action_value = $value;
+                $actions_issued++;
+            }
+
+            if ($key == "m" || $key == "--merge") {
+                $action = "merge";
                 $action_value = $value;
                 $actions_issued++;
             }
@@ -237,6 +243,10 @@ try {
                 $app->add_patches($recordList);
                 break;
 
+            case "merge":
+                $app->merge_patches($action_value);
+                break;
+
             case "record":
                 $recordList = explode(",", $action_value);
                 $app->record_patches($recordList);
@@ -280,6 +290,9 @@ Where COMMAND is one of:
 
    -l or --list
       List which patches would be applied to the database if --patch was run.
+
+   -m or --merge=[schema/data]
+      Merge current patches into new single [schema/data] file
 
    -aVERSION or --add=VERSION
       Apply one or more patches to the database, specified by VERSION. See below
