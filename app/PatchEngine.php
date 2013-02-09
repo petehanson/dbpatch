@@ -313,6 +313,7 @@ class Patch_Engine {
 
 
         $paths = array();
+        $types = array();
         foreach($inorder as $patch_file)
         {
             if (file_exists($this->schemapath . '/' . $patch_file)) {
@@ -322,8 +323,10 @@ class Patch_Engine {
                     die;
                 }
                 $paths[$patch_file] = $this->schemapath . '/' . $patch_file;
+                $types[$patch_file] = 'schema';
             } elseif (file_exists($this->datapath . '/' . $patch_file)) {
                 $paths[$patch_file] = $this->datapath . '/' . $patch_file;
+                $types[$patch_file] = 'data';
             } else {
                 $this->printer->write("Aborting process: File {$patch_file} not found");
                 die;
@@ -337,7 +340,12 @@ class Patch_Engine {
                 throw new exception('Unable to read patch file: ' . $paths[$patch_file]);
             }
 
-            $written = file_put_contents($fullpath, $contents, FILE_APPEND);
+            $header = PHP_EOL;
+            $header .= '-- ' . PHP_EOL;
+            $header .= '-- Originally from ' . $types[$patch_file] . ': ' . $paths[$patch_file] . PHP_EOL;
+            $header .= '-- ' . PHP_EOL;
+            $written = file_put_contents($fullpath, ($header . $contents), FILE_APPEND);
+            unset($contents);
             if (!$written) {
                 throw new exception('Unable to append patch file: ' . $patch_file );
             }
