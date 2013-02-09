@@ -342,7 +342,7 @@ class Patch_Engine {
 
             $header = PHP_EOL;
             $header .= '-- ' . PHP_EOL;
-            $header .= '-- Originally from ' . $types[$patch_file] . ': ' . $paths[$patch_file] . PHP_EOL;
+            $header .= '-- Originally from ' . $types[$patch_file] . ': ' . $patch_file . PHP_EOL;
             $header .= '-- ' . PHP_EOL;
             $written = file_put_contents($fullpath, ($header . $contents), FILE_APPEND);
             unset($contents);
