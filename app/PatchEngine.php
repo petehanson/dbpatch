@@ -252,6 +252,9 @@ class Patch_Engine {
 
     public function merge_patches($patch_type, $unlinkAfter = true)
     {
+        $this->printer->write('');
+        $this->printer->write('Starting merge in `' . $this->dbName . '`');
+
         switch ($patch_type) {
             case "schema":
                 $path = $this->schemapath;
@@ -340,12 +343,24 @@ class Patch_Engine {
                 throw new exception('Unable to read patch file: ' . $paths[$patch_file]);
             }
 
+            // add a comment header identifying the source patch
             $header = PHP_EOL;
             $header .= '-- ' . PHP_EOL;
             $header .= '-- Originally from ' . $types[$patch_file] . ': ' . $patch_file . PHP_EOL;
             $header .= '-- ' . PHP_EOL;
-            $written = file_put_contents($fullpath, ($header . $contents), FILE_APPEND);
+            $header .= PHP_EOL;
+            // make sure we're starting with appropriate delimiter in case previous file had a different one
+            $header .= 'DELIMITER ;' . PHP_EOL;
+            $header .= PHP_EOL;
+
+            // write the header
+            $written = file_put_contents($fullpath, $header, FILE_APPEND);
+            // if successful add the contents
+            if ($written) $written = file_put_contents($fullpath, $contents, FILE_APPEND);
+            // free mem
             unset($contents);
+
+            // stop on error
             if (!$written) {
                 throw new exception('Unable to append patch file: ' . $patch_file );
             }
@@ -360,6 +375,7 @@ class Patch_Engine {
             }
         }
 
+        $this->printer->write('Done merging in `' . $this->dbName . '`');
         return true;
     }
 
@@ -614,5 +630,3 @@ class Patch_Engine {
 		return $this->db;
 	}
 }
-
-?>
