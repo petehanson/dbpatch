@@ -277,7 +277,7 @@ class Patch_Engine {
         sort($inorder);
 
         if (empty($inorder)) {
-            $this->printer->write('  No patches to merge, skipping.');
+            $this->printer->write('No patches to merge in `' . $this->dbName . '`, skipping.');
             return;
         }
 
