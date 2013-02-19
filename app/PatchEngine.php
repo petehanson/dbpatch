@@ -168,6 +168,7 @@ class Patch_Engine {
         $this->printer->write("");
         if (!empty($needed_schema_patches)) {
             $this->printer->write("Schema patches that will be applied:");
+            sort($needed_schema_patches);
             foreach ($needed_schema_patches as $patch) {
                 $this->printer->write("\t" . $patch);
             }
@@ -180,6 +181,7 @@ class Patch_Engine {
         $this->printer->write("");
         if (!empty($needed_data_patches)) {
             $this->printer->write("Data patches that will be applied:");
+            sort($needed_data_patches);
             foreach ($needed_data_patches as $patch) {
                 $this->printer->write("\t" . $patch);
             }
