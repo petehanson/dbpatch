@@ -30,6 +30,7 @@ class Patch_Engine {
     protected $basefile;
     protected $schemapath;
     protected $datapath;
+    protected $scriptpath;
     protected $dbType;
     //protected $dryRun;
     protected $versionsToProcess;
@@ -64,6 +65,7 @@ class Patch_Engine {
         $this->dbTrackPatchesInFile = $config->dbTrackPatchesInFile;
         $this->schemapath = realpath($base_folder . "/" . $config->schemapath);
         $this->datapath = realpath($base_folder . "/" . $config->datapath);
+        $this->scriptpath = realpath($base_folder . "/" . $config->scriptpath);
 
         $this->versionsToProcess = null;
         $this->skip_patches = array();
@@ -124,18 +126,22 @@ class Patch_Engine {
         // get list of patches on the file system
         $schema_patches = $this->get_patch_files($this->schemapath);
         $data_patches = $this->get_patch_files($this->datapath);
+        $script_patches = $this->get_patch_files($this->scriptpath);
 
         // determine outstanding patches
         $needed_schema_patches = array_diff($schema_patches, $applied_patches);
         $needed_data_patches = array_diff($data_patches, $applied_patches);
+        $needed_script_patches = array_diff($script_patches, $applied_patches);
 
         // filter out any specified in skip
         $needed_schema_patches = array_diff($needed_schema_patches, $this->skip_patches);
         $needed_data_patches = array_diff($needed_data_patches, $this->skip_patches);
+        $needed_script_patches = array_diff($needed_script_patches, $this->skip_patches);
 
         return array(
             'data' => $needed_data_patches,
-            'schema' => $needed_schema_patches
+            'schema' => $needed_schema_patches,
+            'script' => $needed_script_patches
         );
     }
 
@@ -154,6 +160,7 @@ class Patch_Engine {
         }
         $needed_data_patches = $needed_patches['data'];
         $needed_schema_patches = $needed_patches['schema'];
+        $needed_script_patches = $needed_patches['script'];
 
         // Say which patches have been marked to be skipped
         if (count($this->skip_patches) > 0) {
@@ -189,6 +196,17 @@ class Patch_Engine {
             $this->printer->write("No data patches to be applied were found");
         }
 
+        // Say which script patches will be applied
+        $this->printer->write("");
+        if (!empty($needed_script_patches)) {
+            $this->printer->write("Script patches that will be applied:");
+            foreach ($needed_script_patches as $patch) {
+                $this->printer->write("\t" . $patch);
+            }
+        } else {
+            $this->printer->write("No script patches to be applied were found");
+        }
+
         return true;
     }
 
@@ -206,21 +224,23 @@ class Patch_Engine {
         }
         $needed_data_patches = $needed_patches['data'];
         $needed_schema_patches = $needed_patches['schema'];
+        $needed_script_patches = $needed_patches['script'];
 
         // sort patches into correct order by timestamp prefix (filename)
         sort($needed_schema_patches);
         sort($needed_data_patches);
+        sort($needed_script_patches);
 
         // Print out what patches will be applied/skipped
         $this->list_patches($needed_patches);
 
 
-        if (empty($needed_schema_patches) && empty($needed_data_patches)) {
+        if (empty($needed_schema_patches) && empty($needed_data_patches) && empty($needed_script_patches)) {
             $this->printer->write("");
             $this->printer->write("No patches were applied.");
         } else {
             $this->printer->write("");
-            $inorder = array_merge($needed_schema_patches, $needed_data_patches);
+            $inorder = array_merge($needed_schema_patches, $needed_data_patches, $needed_script_patches);
             sort($inorder);
             $this->add_patches($inorder);
             //$this->add_patches(array_merge($needed_schema_patches, $needed_data_patches), $bundleInFile);
@@ -263,6 +283,9 @@ class Patch_Engine {
                 break;
             case "data":
                 $path = $this->datapath;
+                break;
+            case "script":
+                throw new exception("Cannot merge scripts.");
                 break;
             default:
                 throw new exception("An invalid patch type was provided.");
@@ -383,6 +406,8 @@ class Patch_Engine {
 
     protected function get_patch_files($path) {
         $files = array();
+        if (!is_string($path)) return array();
+        else if (!is_dir($path)) die($path . ' does not exist');
         $dir = new DirectoryIterator($path);
         foreach ($dir as $item) {
             if (!$item->isDot() && preg_match("/^\d{8}_\d{6}/", $item->getFilename())) {
@@ -438,16 +463,39 @@ class Patch_Engine {
                 $this->printer->write("Patch {$patch} is already applied and will be skipped.\n");
                 continue;
             }
-            if (file_exists($this->schemapath . '/' . $patch)) {
-                if (file_exists($this->datapath . '/' . $patch)) {
-                    // file exists in both folders. Abort operation
-                    $this->printer->write("Aborting process: File {$patch} exists in both {$this->schemapath} and {$this->datapath} folders.");
-                    die;
+            $schemaExists = file_exists($this->schemapath . '/' . $patch);
+            $dataExists = file_exists($this->datapath . '/' . $patch);
+            $scriptExists = file_exists($this->scriptpath . '/' . $patch);
+            $patchCount = ($schemaExists ? 1 : 0) + ($dataExists ? 1 : 0) + ($scriptExists ? 1 : 0);
+            if ($patchCount > 1) {
+                // file exists in more than one folder. Abort operation
+                $msg = "Aborting process: File {$patch} exists in ";
+                $conj = false;
+                if ($schemaExists) {
+                    $msg .= ' ' . $this->schemapath;
+                    $conj = true;
                 }
+                if ($dataExists) {
+                    if ($conj) $msg .= ' and ';
+                    $msg .= ' ' . $this->datapath;
+                    $conj = true;
+                }
+                if ($scriptExists) {
+                    if ($conj) $msg .= ' and ';
+                    $msg .= ' ' . $this->scriptpath;
+                    $conj = true;
+                }
+                $msg .= ' folders.';
+                $this->printer->write( $msg );
+                die;
+            } else if ($schemaExists) {
                 $paths[$patch] = $this->schemapath . '/' . $patch;
                 //echo "\nsaving {$patch} in " . __LINE__."\n";
-            } elseif (file_exists($this->datapath . '/' . $patch)) {
+            } elseif ($dataExists) {
                 $paths[$patch] = $this->datapath . '/' . $patch;
+                //echo "\nsaving {$patch} in " . __LINE__."\n";
+            } elseif ($scriptExists) {
+                $paths[$patch] = $this->scriptpath . '/' . $patch;
                 //echo "\nsaving {$patch} in " . __LINE__."\n";
             } else {
                 $this->printer->write("Aborting process: File {$patch} not found");
@@ -482,8 +530,17 @@ class Patch_Engine {
                 $this->check_file_for_root_statements($path);
             }
 
-            $this->db->executeFile($path);
-            if ($this->db->has_error()) {
+            $retval = null;
+            $scpathlen = strlen($this->scriptpath . '/');
+            if (substr($path, 0, $scpathlen) == ($this->scriptpath . '/' )) {
+                // script
+                $retval = $this->executeScript($path);
+            } else {
+                $this->db->executeFile($path);
+                $retval = !$this->db->has_error();
+            }
+
+            if (!$retval) {
                 $this->printer->write("Error: {$path}");
                 break;
             } else {
@@ -499,6 +556,11 @@ class Patch_Engine {
      * if needed.
      */
     private function check_file_for_root_statements($filePath) {
+        // skip sh & php
+        $pInfo = pathinfo($filePath);
+        if (!is_array($pInfo)) return null;
+        if ((strtolower($pInfo['extension']) == 'php') || (strtolower($pInfo['extension']) == 'sh'))  return false;
+
         $fileContents = file_get_contents($filePath);
 
         if ($fileContents) {
@@ -561,12 +623,21 @@ class Patch_Engine {
      */
     public function create_patch($patch_type) {
 
+        $extension = 'sql';
         switch ($patch_type) {
             case "schema":
                 $path = $this->schemapath;
                 break;
             case "data":
                 $path = $this->datapath;
+                break;
+            case "phpscript":
+                $path = $this->scriptpath;
+                $extension = 'php';
+                break;
+            case "shscript":
+                $path = $this->scriptpath;
+                $extension = 'sh';
                 break;
             default:
                 throw new exception("An invalid patch type was provided.");
@@ -587,7 +658,7 @@ class Patch_Engine {
 	}
 
         // set the file name
-        $patch_file_name = "{$timestamp_prefix}_{$normalized_answer}.sql";
+        $patch_file_name = "{$timestamp_prefix}_{$normalized_answer}." . $extension;
 
         $this->printer->write("Patch file name: {$patch_file_name}", 2);
 
@@ -631,4 +702,42 @@ class Patch_Engine {
 	{
 		return $this->db;
 	}
+
+    public function executeScript($filePath)
+    {
+        $retval = null;
+
+        // skip sh & php
+        $pInfo = pathinfo($filePath);
+        if (!is_array($pInfo)) return null;
+        if (strtolower($pInfo['extension']) == 'php') {
+            $this->printer->write('Executing PHP script: ' . $filePath);
+            $start = microtime(true);
+            $php = (defined('PHP_BINARY') ? constant('PHP_BINARY') : (PHP_BINDIR . DIRECTORY_SEPARATOR . 'php'));
+            $tmpfile = tempnam('', basename($filePath));
+            $rvar = null;
+            system($php . ' ' . $filePath . ' > "' . $tmpfile . '" 2>&1', $rvar);
+            $retval = ($rvar == 0);
+            $end = microtime(true);
+            $this->printer->write('Execution completed in ' . sprintf('%.5f', $end - $start) . ' seconds');
+            $this->printer->write('Output in: ' . $tmpfile);
+
+        } else if (strtolower($pInfo['extension']) == 'sh') {
+            $this->printer->write('Executing SH script: ' . $filePath);
+            $start = microtime(true);
+            $rvar = null;
+            $tmpfile = tempnam('', basename($filePath));
+            system('/bin/bash ' . $filePath . ' > "' . $tmpfile . '" 2>&1', $rvar);
+            $retval = ($rvar == 0);
+            $end = microtime(true);
+            $this->printer->write('Execution completed in ' . sprintf('%.5f', $end - $start) . ' seconds');
+            $this->printer->write('Output in: ' . $tmpfile);
+
+        } else {
+            $retval = false;
+
+        }
+
+        return $retval;
+    }
 }

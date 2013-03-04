@@ -198,6 +198,9 @@ try {
     $printer = new printer($printLevel);
 
     foreach ($singleDbConfigs as $config) {
+        $printer->write('-------------------------------------------------');
+        $printer->write('Working on database: ' . $config->dbName);
+        $printer->write('-------------------------------------------------');
         $app = new Patch_Engine($config, $printer, DBPATCH_BASE_PATH);
         if ($action != "help") {
             $printer->write("Action: {$action}", 2);
@@ -290,6 +293,9 @@ Where COMMAND is one of:
 
    -l or --list
       List which patches would be applied to the database if --patch was run.
+
+   -c or --create=[schema/data/phpscript/shscript]
+      Create a new patch/script
 
    -m or --merge=[schema/data]
       Merge current patches into new single [schema/data] file

@@ -15,6 +15,7 @@ class DbPatch_Config_SingleDb
     public $basepath;
     public $schemapath;
     public $datapath;
+    public $scriptpath;
     public $standardized_timezone;
     public $prompt_for_root_user;
     public $root_level_commands;

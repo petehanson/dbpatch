@@ -31,6 +31,12 @@ class DbPatch_Config_Master extends config {
      */
     public static $datapath = "sql/data/";
 
+    /**
+     * @todo Should not be used anymore
+     * @deprecated
+     */
+    public static $scriptpath = "sql/scripts/";
+
     public static $standardized_timezone = "UTC";
 
     /**
@@ -55,10 +61,10 @@ class DbPatch_Config_Master extends config {
         $configs = array();
         foreach (self::$db as $name => $data) {
             $config = new DbPatch_Config_SingleDb();
-            
+
             if (isset($data['driver']))
                 $config->dbClassFile = $data['driver'];
-            
+
             $config->dbType = $data['databasetype'];
             $config->dbHost = $data['host'];
             $config->dbName = $data['name'];
@@ -70,6 +76,7 @@ class DbPatch_Config_Master extends config {
             $config->basepath = $name . '/' . self::$basepath;
             $config->schemapath = $name . '/' . self::$schemapath;
             $config->datapath = $name . '/' . self::$datapath;
+            $config->scriptpath = $name . '/' . self::$scriptpath;
 
             $config->basefile = self::$basefile;
             $config->standardized_timezone = self::$standardized_timezone;
