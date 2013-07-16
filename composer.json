@@ -1,0 +1,14 @@
+{
+    "name": "uar/dbpatch",
+    "description": "dbpatch",
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-0": { "uar\\dbpatch\\": "" }
+    },
+    "authors": [
+        {
+            "name": "Up and Running Software",
+            "email": "solutions@upandrunningsoftware.com"
+        }
+    ]
+}
