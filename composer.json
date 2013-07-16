@@ -1,9 +1,9 @@
 {
-    "name": "uar/dbpatch",
-    "description": "dbpatch",
+    "name": "uarsoftware/dbpatch",
+    "description": "Provides a database patching solution for handling incremental schema and data changes to a project's database.",
     "minimum-stability": "stable",
     "autoload": {
-        "psr-0": { "uar\\dbpatch\\": "" }
+        "psr-0": { "uarsoftware\\dbpatch\\": "" }
     },
     "authors": [
         {
