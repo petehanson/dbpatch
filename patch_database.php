@@ -92,7 +92,7 @@ try {
     // actions: help, list, add, record, patch, create
     // modifiers: verbose, quiet, skip (works only with patch)
     $opts = Console_Getopt::getOpt($argv, "hqvlpaf::s::S::r::c::m::", array("help", "list", "verbose", "quiet", "add=",
-                "skip=", "skip-and-record=", "record=", "create=", "merge=", "patch", "produce-patch-file"));
+                "skip=", "skip-and-record=", "record=", "create=", "merge=", "patch", "create-database-folders="));
 
     //print_r($opts);
 
@@ -121,6 +121,14 @@ try {
             if ($key == "h" || $key == "--help") {
                 $action = "help";
                 $actions_issued++;
+            }
+            
+            if ($key == "--create-database-folders") {
+                $action = "create-database-folders";
+                if (!empty($value)) {
+                    $action_value = $value;
+                    $actions_issued++;
+                }
             }
 
             if ($key == "v" || $key == "--verbose") {
@@ -192,6 +200,14 @@ try {
         echo "{$argv[0]} cannot be called with more than one action parameter.\n";
         echo "Help: {$argv[0]} --help\n";
         exit;
+    }
+    
+    if ($action == 'help') {
+        displayHelp();
+        exit;
+    } else if ($action == 'create-database-folders') {
+        createDatabaseFolders($action_value);
+        exit;   
     }
 
     // set up the printer
@@ -307,6 +323,9 @@ Where COMMAND is one of:
    -rVERSION or --record=VERSION
       Mark one or more patches as already having been added to the database, but
       don't actually apply the patches. See below for the syntax of VERSION.
+       
+    --create-database-folders=[dbname]   
+      Create new folder data for the database
 
 
 VERSION syntax:
@@ -359,5 +378,33 @@ EOHELP;
     } else {
         echo $help;
     }
+}
+
+function createDatabaseFolders($db_name) {
+    $sql_dir = DBPATCH_BASE_PATH . DIRECTORY_SEPARATOR . 'sql';
+    
+    if (!file_exists($sql_dir) && !mkdir($sql_dir)) {
+        die("Could not create '{$sql_dir}' folder"); 
+    }
+    
+    $base_dir = DBPATCH_BASE_PATH . DIRECTORY_SEPARATOR . 'sql' . DIRECTORY_SEPARATOR . 'base';
+    
+    if (!file_exists($base_dir) && !mkdir($base_dir)) {
+        die("Could not create '{$base_dir}' folder"); 
+    }
+    
+    $schema_dir = DBPATCH_BASE_PATH . DIRECTORY_SEPARATOR . 'sql' . DIRECTORY_SEPARATOR . 'schema';
+    
+    if (!file_exists($schema_dir) && !mkdir($schema_dir)) {
+        die("Could not create '{$schema_dir}' folder"); 
+    }
+    
+    $data_dir = DBPATCH_BASE_PATH . DIRECTORY_SEPARATOR . 'sql' . DIRECTORY_SEPARATOR . 'data';
+    
+    if (!file_exists($data_dir) && !mkdir($data_dir)) {
+        die("Could not create '{$data_dir}' folder"); 
+    }
+    
+    echo 'Database folders created';
 }
 ?>
