@@ -532,7 +532,7 @@ class Patch_Engine {
 
             $retval = null;
             $scpathlen = strlen($this->scriptpath . '/');
-            if (substr($path, 0, $scpathlen) == ($this->scriptpath . '/' )) {
+            if (substr($path, 0, $scpathlen) == ($this->scriptpath . '/' ) && strtolower(substr($path, -4)) != '.sql') {
                 // script
                 $retval = $this->executeScript($path);
             } else {
