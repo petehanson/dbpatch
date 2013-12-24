@@ -283,7 +283,7 @@ class mysql_database implements driverinterface {
             if ($r = $this->connection->use_result()) {
                 $r->free();
             }
-        } while ($this->connection->next_result());
+        } while ($this->connection->more_results());
     }
 
     /**
@@ -297,7 +297,7 @@ class mysql_database implements driverinterface {
             if ($r = $this->connection->store_result()) {
                 $results[] = $r;
             }
-        } while ($this->connection->next_result());
+        } while ($this->connection->more_results());
         if (count($results) === 1) {
             return $results[0];
         }

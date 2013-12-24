@@ -91,7 +91,8 @@ try {
     // two types of options, actions and modifiers
     // actions: help, list, add, record, patch, create
     // modifiers: verbose, quiet, skip (works only with patch)
-    $opts = Console_Getopt::getOpt($argv, "hqvlpaf::s::S::r::c::m::", array("help", "list", "verbose", "quiet", "add=",
+    $console = new Console_Getopt();
+    $opts = $console->getOpt($argv, "hqvlpaf::s::S::r::c::m::", array("help", "list", "verbose", "quiet", "add=",
                 "skip=", "skip-and-record=", "record=", "create=", "merge=", "patch", "create-database-folders="));
 
     //print_r($opts);
