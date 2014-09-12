@@ -26,7 +26,9 @@ $version = "0.31";
  */
 // sets the working directory to the folder the script runs from
 
-ini_set('error_reporting', E_ALL & ~E_STRICT);
+
+//ini_set('error_reporting', E_ALL & ~E_STRICT);
+
 
 // if we weren't supplied a wrapper from an include, define our own path
 // use this path everywhere
@@ -35,46 +37,24 @@ if (!defined('DBPATCH_BASE_PATH')) define('DBPATCH_BASE_PATH', dirname(__FILE__)
 // require from global path
 require_once("Console/Getopt.php");
 
-// get overridden db class
-require_once (DBPATCH_BASE_PATH  . "/db.php");
-
 // pull in the rest of the engine
-require_once (dirname(__FILE__) . "/app/PatchEngine.php");
-require_once (dirname(__FILE__) . '/app/PatchFileBundler.php');
-require_once (dirname(__FILE__) . '/trackers/TrackerInterface.php');
-require_once (dirname(__FILE__) . '/trackers/XmlFileVersionTracker.php');
-require_once (dirname(__FILE__) . '/trackers/FileTrackerFactory.php');
-require_once (dirname(__FILE__) . '/database_drivers/DriverFactory.php');
-
-$masterConfig = new db();
-$singleDbConfigs = $masterConfig->getSingleDbConfigs();
-
-foreach ($singleDbConfigs as $db) {
-    /* @var $db DbPatch_Config_SingleDb */
-
-    if (isset($db->dbType))
-    {
-        require_once(dirname(__FILE__) . '/database_drivers/' . $db->dbType . '_database.php');
-    }
-    else
-        require_once(dirname(__FILE__) . '/database_drivers/' . $db->dbClassFile);
-
-}
-
+require_once(dirname(__FILE__) . "/app/Config.php");
+require_once(dirname(__FILE__) . "/app/ConfigManager.php");
+require_once(dirname(__FILE__) . "/app/PatchEngine.php");
+require_once(dirname(__FILE__) . '/app/PatchFileBundler.php');
+require_once(dirname(__FILE__) . '/trackers/TrackerInterface.php');
+require_once(dirname(__FILE__) . '/trackers/XmlFileVersionTracker.php');
+require_once(dirname(__FILE__) . '/trackers/FileTrackerFactory.php');
+require_once(dirname(__FILE__) . '/database_drivers/DriverFactory.php');
 require_once(dirname(__FILE__) . "/printers/cli.php");
 
-/**
- * pathToScript is the execution directory
- *
- */
-/*
-$pathToScript = dirname($_SERVER['SCRIPT_FILENAME']);
-
-chdir($pathToScript);
- */
 
 // chdir to the base path
 chdir(DBPATCH_BASE_PATH);
+
+
+
+
 
 /**
  *  Following here is the execution loop itself.
@@ -86,6 +66,13 @@ chdir(DBPATCH_BASE_PATH);
  *
  */
 try {
+
+    $config_file = DBPATCH_BASE_PATH . "/config.php";
+    if (file_exists($config_file) == false) {
+        throw new exception("Config file is missing");
+    }
+
+    require_once($config_file);
 
 
     // two types of options, actions and modifiers
@@ -202,7 +189,8 @@ try {
         echo "Help: {$argv[0]} --help\n";
         exit;
     }
-    
+
+    /*
     if ($action == 'help') {
         displayHelp();
         exit;
@@ -210,15 +198,20 @@ try {
         createDatabaseFolders($action_value);
         exit;   
     }
+    */
 
     // set up the printer
     $printer = new printer($printLevel);
 
-    foreach ($singleDbConfigs as $config) {
-        $printer->write('-------------------------------------------------');
-        $printer->write('Working on database: ' . $config->dbName);
-        $printer->write('-------------------------------------------------');
-        $app = new Patch_Engine($config, $printer, DBPATCH_BASE_PATH);
+    //foreach ($singleDbConfigs as $config) {
+
+        //$printer->write('-------------------------------------------------');
+        //$printer->write('Working on database: ' . $config->dbName);
+        //$printer->write('-------------------------------------------------');
+
+
+    die();
+        $app = new Patch_Engine($singleDbConfigs, $printer, DBPATCH_BASE_PATH);
         if ($action != "help") {
             $printer->write("Action: {$action}", 2);
             $printer->write("Action Value: {$action_value}", 2);
@@ -276,12 +269,18 @@ try {
                 $app->apply_patches(true);
                 break;
 
+
+            case "create-database-folders":
+                $app->create_patch_folders($action_value);
+                break;
+
             case "help":
             default:
                 displayHelp();
-                break 2; // exit the switch and the foreach
+                //break 2; // exit the switch and the foreach
+                break;
         }
-    }
+    //}
 } catch (Exception $e) {
     echo "{$e->getMessage()}\n";
     echo "{$e->getTraceAsString()}\n";

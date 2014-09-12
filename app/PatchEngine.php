@@ -56,7 +56,7 @@ class Patch_Engine {
      * interface.
      *
      */
-    public function __construct(DbPatch_Config_SingleDb $config, printerbase $printer, $base_folder, $suppressDbCreation = false) {
+    public function __construct(configuration $configuration, printerbase $printer, $base_folder, $suppressDbCreation = false) {
         $this->printer = $printer;
 
         $this->base_folder = realpath($base_folder);
@@ -519,6 +519,12 @@ class Patch_Engine {
             $this->printer->write("No patch has been applied, all listed patches are either already applied or not found.");
         }
     }
+
+
+    public function create_patch_folders($db_config_name) {
+
+    }
+
 
     /*
      * Execute files using appropriate DB Driver
