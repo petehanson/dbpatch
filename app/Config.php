@@ -3,33 +3,89 @@
 class Config {
 
     protected $id;
+
+    protected $driver;
     protected $host;
     protected $port;
-    protected $databasename;
+    protected $databaseName;
     protected $user;
-    protected $pass;
-
+    protected $password;
     protected $trackPatchesInFile;
 
-    public function __construct($id,$host = null,$databasename = null,$user = null,$pass = null,$port = null) {
+    protected $baseFile;
+    protected $basePath;
+    protected $schemaPath;
+    protected $dataPath;
+    protected $scriptPath;
+    protected $standardizedTimezone;
+    protected $rootLevelCommands;
+
+
+    public function __construct($id,$driver = null, $host = null,$databaseName = null,$user = null,$pass = null,$port = null) {
 
         $this->id = $id;
 
+        if ($driver !== null) $this->setDriver($driver);
         if ($host !== null) $this->setHost($host);
-        if ($databasename !== null) $this->setDatabaseName($databasename);
+        if ($databaseName !== null) $this->setDatabaseName($databaseName);
         if ($user !== null) $this->setUser($user);
         if ($pass !== null) $this->setPassword($pass);
         if ($port !== null) $this->setPort($port);
 
         $this->disableTrackingPatchesInFile();
+
+
+        $this->baseFile = "base.sql";
+        $this->basePath = "sql" . DIRECTORY_SEPARATOR . "base";
+        $this->schemaPath = "sql" . DIRECTORY_SEPARATOR . "schema";
+        $this->dataPath = "sql" . DIRECTORY_SEPARATOR . "data";
+        $this->scriptPath = "sql" . DIRECTORY_SEPARATOR . "scripts";
+
+        $this->standardizedTimezone = "UTC";
+
+        $this->rootLevelCommands = array( "EVENT", "TRIGGER", "DROP DATABASE", "SHUTDOWN", "FILE", "GRANT", "CREATE USER", "REVOKE" );
+    }
+
+
+
+    public function getID() {
+        return $this->id;
+    }
+
+    public function setTrackingPatchesInFile($input) {
+        $this->trackPatchesInFile = ($input) ? true : false;
+    }
+
+    public function enableTrackingPatchesInFile() {
+        $this->trackPatchesInFile = true;
+    }
+
+    public function disableTrackingPatchesInFile() {
+        $this->trackPatchesInFile = false;
+    }
+
+    public function getRootLevelCommands() {
+        return $this->rootLevelCommands;
+    }
+
+    public function addRootLevelCommands($input) {
+        if (is_array($input)) {
+            array_merge($this->rootLevelCommands,$input);
+        } else {
+            array_push($this->rootLevelCommands,$input);
+        }
+    }
+
+    public function resetRootLevelCommands() {
+        $this->rootLevelCommands = array();
     }
 
     /**
-     * @param mixed $databasename
+     * @param mixed $databaseName
      */
-    public function setDatabaseName($databasename)
+    public function setDatabaseName($databaseName)
     {
-        $this->databasename = $databasename;
+        $this->databaseName = $databaseName;
     }
 
     /**
@@ -37,7 +93,23 @@ class Config {
      */
     public function getDatabaseName()
     {
-        return $this->databasename;
+        return $this->databaseName;
+    }
+
+    /**
+     * @param mixed $driver
+     */
+    public function setDriver($driver)
+    {
+        $this->driver = $driver;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getDriver()
+    {
+        return $this->driver;
     }
 
     /**
@@ -57,19 +129,19 @@ class Config {
     }
 
     /**
-     * @param mixed $pass
+     * @param mixed $password
      */
-    public function setPass($pass)
+    public function setPassword($password)
     {
-        $this->pass = $pass;
+        $this->password = $password;
     }
 
     /**
      * @return mixed
      */
-    public function getPass()
+    public function getPassword()
     {
-        return $this->pass;
+        return $this->password;
     }
 
     /**
@@ -104,17 +176,104 @@ class Config {
         return $this->user;
     }
 
-    public function getID() {
-        return $this->id;
+    /**
+     * @param string $baseFile
+     */
+    public function setBaseFile($baseFile)
+    {
+        $this->baseFile = $baseFile;
     }
 
-    public function enableTrackingPatchesInFile() {
-        $this->trackPatchesInFile = true;
+    /**
+     * @return string
+     */
+    public function getBaseFile()
+    {
+        return $this->baseFile;
     }
 
-    public function disableTrackingPatchesInFile() {
-        $this->trackPatchesInFile = false;
+    /**
+     * @param string $basePath
+     */
+    public function setBasePath($basePath)
+    {
+        $this->basePath = $basePath;
     }
+
+    /**
+     * @return string
+     */
+    public function getBasePath()
+    {
+        return $this->basePath;
+    }
+
+    /**
+     * @param string $dataPath
+     */
+    public function setDataPath($dataPath)
+    {
+        $this->dataPath = $dataPath;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDataPath()
+    {
+        return $this->dataPath;
+    }
+
+    /**
+     * @param string $schemaPath
+     */
+    public function setSchemaPath($schemaPath)
+    {
+        $this->schemaPath = $schemaPath;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSchemaPath()
+    {
+        return $this->schemaPath;
+    }
+
+    /**
+     * @param string $scriptPath
+     */
+    public function setScriptPath($scriptPath)
+    {
+        $this->scriptPath = $scriptPath;
+    }
+
+    /**
+     * @return string
+     */
+    public function getScriptPath()
+    {
+        return $this->scriptPath;
+    }
+
+    /**
+     * @param string $standardizedTimezone
+     */
+    public function setStandardizedTimezone($standardizedTimezone)
+    {
+        $this->standardizedTimezone = $standardizedTimezone;
+    }
+
+    /**
+     * @return string
+     */
+    public function getStandardizedTimezone()
+    {
+        return $this->standardizedTimezone;
+    }
+
+
+
 
 
 }

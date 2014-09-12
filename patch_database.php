@@ -67,12 +67,21 @@ chdir(DBPATCH_BASE_PATH);
  */
 try {
 
+    // determine that our config exists and then set up the configuration manager
     $config_file = DBPATCH_BASE_PATH . "/config.php";
     if (file_exists($config_file) == false) {
         throw new exception("Config file is missing");
     }
 
-    require_once($config_file);
+    $configArray = require_once($config_file);
+    $cm = new ConfigManager();
+    $cm->addConfigsByArray($configArray);
+
+    var_dump($cm->getConfigs());
+
+    if ($cm->hasValidConfig() == false) {
+        throw new exception("configuration manager doesn't contain a valid configuration");
+    }
 
 
     // two types of options, actions and modifiers
@@ -210,8 +219,10 @@ try {
         //$printer->write('-------------------------------------------------');
 
 
+    $app = new Patch_Engine($cm, $printer, DBPATCH_BASE_PATH);
+
     die();
-        $app = new Patch_Engine($singleDbConfigs, $printer, DBPATCH_BASE_PATH);
+
         if ($action != "help") {
             $printer->write("Action: {$action}", 2);
             $printer->write("Action Value: {$action_value}", 2);

@@ -7,21 +7,17 @@
  */
 class Driver_Factory {
 
-    public static function Create($dbType, $dbHost, $dbName, $dbUsername, $dbPassword, $printer, $baseSchema, $suppressDbCreation = false) {
-        
-        if ($dbType == "mysql")
-        {
-            return new mysql_database($dbHost, $dbName, 
-                $dbUsername, $dbPassword, $printer, $baseSchema, $suppressDbCreation);
+    public static function Create(Config $config, $printer, $baseSchema, $suppressDbCreation = false) {
 
-        } else if ($dbType == "pgsql") {
-            return new pg_database($dbHost, $dbName, 
-                $dbUsername, $dbPassword, $printer, $baseSchema, $suppressDbCreation);
-        } else {
-            throw new Exception('unhandled database type: ' . $dbType);
+        switch ($config->getDriver()) {
+
+            case "mysql":
+                return new mysql_database($config->getHost(),$config->getDatabaseName(),$config->getUser(),$config->getPassword(), $printer, $baseSchema, $suppressDbCreation);
+                break;
+
+            default:
+                throw new Exception('unhandled database type: ' . $config->getDriver());
         }
+        
     }
-
 }
-
-?>

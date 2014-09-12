@@ -32,7 +32,12 @@ class Patch_Engine {
     protected $datapath;
     protected $scriptpath;
     protected $dbType;
+
+
+
     //protected $dryRun;
+
+
     protected $versionsToProcess;
     protected $skip_patches;
     protected $versionsToRecord;
@@ -42,6 +47,8 @@ class Patch_Engine {
     protected $bundler;
     protected $root_level_commands;
     protected $prompt_for_root_user;
+
+    protected $configManager;
 
     /*     * #@- */
 
@@ -56,16 +63,20 @@ class Patch_Engine {
      * interface.
      *
      */
-    public function __construct(configuration $configuration, printerbase $printer, $base_folder, $suppressDbCreation = false) {
+    public function __construct(ConfigManager $configManager, printerbase $printer, $base_folder, $suppressDbCreation = false) {
         $this->printer = $printer;
-
+        $this->configManager = $configManager;
         $this->base_folder = realpath($base_folder);
+
+
+        /*
         $this->basepath = realpath($base_folder . "/" . $config->basepath);
         $this->basefile = $config->basefile;
         $this->dbTrackPatchesInFile = $config->dbTrackPatchesInFile;
         $this->schemapath = realpath($base_folder . "/" . $config->schemapath);
         $this->datapath = realpath($base_folder . "/" . $config->datapath);
         $this->scriptpath = realpath($base_folder . "/" . $config->scriptpath);
+        */
 
         $this->versionsToProcess = null;
         $this->skip_patches = array();
