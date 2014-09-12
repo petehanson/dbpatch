@@ -2,30 +2,7 @@ ABOUT
 -----
 
 patch_database.php is a versioning tool for databases. It currently supports
-MySQL and PostgreSQL.
-
-As of October, 2012, it is now possible to add dbpatch as a git module and use it unmodified.
-The basic procedure is in your project to:
-  git submodule add username@dev.upandrunningsoftware.com:/data/git/dbpatch.git
-  mkdir sql
-  cd sql
-  cp ../dbpatch/*.tpl .
-  mv config.php.tpl config.php
-  mv db.php.tpl db.php
-  mv patch_wrapper.php.tpl patch_database.php
-  mv reset_db_wrapper.php.tpl reset_db.php
-
-  then set up as appropriate following comments in the wrappers and instructions below.
-    db.php can usually be left untouched
-  The rest of the instructions below still apply, just in the sql directory rather than the dbpatch module directory
-
-  Other notes on using as a git submodule:
-    When checking out the project with dbpatch as a module with version 1.6.5 of Git and later, you can use:
-      git clone --recursive {git URI}
-
-    If you didn't use --recursive or the dbpatch submodule directory is empty, you may need to
-      git submodule update --init
-
+MySQL.
 
 
 INSTALLING/CONFIGURATION
@@ -37,6 +14,47 @@ Dependencies:
     * PHP MySQLi extension installed and enabled
  - For use with PostgreSQL:
     * PHP PostgreSQL extension installed and enabled
+ - Console/GetOpt.php needs to be available in the include path
+
+
+There's two options for installation:
+1. Composer (recommended)
+2. Git Submodule
+
+Composer method
+In your composer.json file, add these lines to your project:
+
+"repositories": [
+	{
+		"type": "vcs",
+		"url":  "ssh://git@secure.upandrunningsoftware.com/dbpatch"
+	}
+],
+"require": {
+	"uarsoftware/dbpatch": "*"
+}
+
+Then run the install or update command with composer
+The files will be installed at vendor/uarsoftware/dbpatch/
+
+
+Git submodule method
+    In your project, run:  git submodule add ssh://git@secure.upandrunningsoftware.com/dbpatch
+    If you’ve cloned the project, then you’ll need to run:
+        git submodule init
+        git submodule update
+
+
+Once you've installed the package with either composer or git, then you want to make a folder to reference the tool and store patches.
+
+1. In the root of your project, make a folder like sql/ or database_patches/. This folder needs to be at the same level as the dbpatch or vendor folder where it was installed.
+2. Copy the files from installation/composer/ or installation/git_submodule, depending on the approach that you used.
+3. Modify the config.php file to fit the number of DBs you'll have. See the section below about the config options.
+4. Init the folders for patch storage for each database in the config with this:  php patch_database.php --init
+
+
+CONFIG.PHP
+----------
 
 Modify config.php to suit your needs. A short description of the configuration 
 options follows:
@@ -81,42 +99,7 @@ database and value as an array of connection options.
    Password associated with user.
 
 
-The following options have been deprecated:
-
- - $dbClassFile:
-   Name of the database driver to use. For MySQL, use 'mysql_database.php'. For
-   PostgreSQL, use 'pgsql_database.php'.
- 
- - $dbHost:
-   Host of the database server. If the database is running on the same machine
-   as this script, use 'localhost'.
-
- - $dbName:
-   Name of the database to be versioned. Currently this script is only able to
-   manage a single database at a time.
-
- - $dbUsername:
-   Username to connect to the database server with.
-
- - $dbPassword:
-   Password associated with $dbUsername.
-
- - $basefile:
-   Filename of the base SQL schema. This is applied once directly after the
-   database is created.
-
- - $basepath:
-   Path to the directory containing $basefile.
-
- - $schemapath:
-   Path to the directory containing the schema patch files.
-
- - $datapath:
-   Path to the directory containing the data patch files.
-
- - $standardized_timezone:
-   Timezone used when recording dates of changes to the database.
-   
+//TODO:  add additional properties here.
 
 
 USAGE
