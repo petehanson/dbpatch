@@ -382,30 +382,26 @@ EOHELP;
 }
 
 function createDatabaseFolders($db_name) {
-    $sql_dir = DBPATCH_BASE_PATH . DIRECTORY_SEPARATOR . 'sql';
-    
-    if (!file_exists($sql_dir) && !mkdir($sql_dir)) {
-        die("Could not create '{$sql_dir}' folder"); 
+
+    $base_dir = DBPATCH_BASE_PATH;
+    $db_dir = $base_dir . DIRECTORY_SEPARATOR . $db_name;
+    $sql_dir = $base_dir . DIRECTORY_SEPARATOR . $db_name . DIRECTORY_SEPARATOR . 'sql';
+    $sqlbase_dir = $base_dir . DIRECTORY_SEPARATOR . $db_name . DIRECTORY_SEPARATOR . 'sql' . DIRECTORY_SEPARATOR . 'base';
+    $schema_dir = $base_dir . DIRECTORY_SEPARATOR . $db_name . DIRECTORY_SEPARATOR . 'sql' . DIRECTORY_SEPARATOR . 'schmea';
+    $data_dir = $base_dir . DIRECTORY_SEPARATOR . $db_name . DIRECTORY_SEPARATOR . 'sql' . DIRECTORY_SEPARATOR . 'data';
+
+    function makeFolder($folder) {
+        if (!file_exists($folder) && !mkdir($folder)) {
+            die("Could not create '{$folder}' folder");
+        }
     }
-    
-    $base_dir = DBPATCH_BASE_PATH . DIRECTORY_SEPARATOR . 'sql' . DIRECTORY_SEPARATOR . 'base';
-    
-    if (!file_exists($base_dir) && !mkdir($base_dir)) {
-        die("Could not create '{$base_dir}' folder"); 
-    }
-    
-    $schema_dir = DBPATCH_BASE_PATH . DIRECTORY_SEPARATOR . 'sql' . DIRECTORY_SEPARATOR . 'schema';
-    
-    if (!file_exists($schema_dir) && !mkdir($schema_dir)) {
-        die("Could not create '{$schema_dir}' folder"); 
-    }
-    
-    $data_dir = DBPATCH_BASE_PATH . DIRECTORY_SEPARATOR . 'sql' . DIRECTORY_SEPARATOR . 'data';
-    
-    if (!file_exists($data_dir) && !mkdir($data_dir)) {
-        die("Could not create '{$data_dir}' folder"); 
-    }
-    
-    echo 'Database folders created';
+
+    makeFolder($db_dir);
+    makeFolder($sql_dir);
+    makeFolder($sqlbase_dir);
+    makeFolder($schema_dir);
+    makeFolder($data_dir);
+
+    echo "Database folders created\n";
 }
 ?>
