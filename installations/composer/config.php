@@ -22,34 +22,24 @@ class config
      * @var array
      */
     public static $db = array(
-        /* 'blog' => array(
-            //'driver' => 'mysql_database.php',
+        'test_db_1' => array(
             'databasetype' => 'mysql',
             'host'   => 'localhost',
-            'name'   => 'my_blog',
+            'name'   => 'test1',
             'user'   => 'root',
             'pass'   => 'root',
-	    'track_patches_in_file'   => false,
+	        'track_patches_in_file'   => false,
             'use_cli_client_for_reset' => false // true if base needs mysql client
-        ), /* */
-        'cms' => array(
-            //'driver' => 'mysql_database.php',
+        ),
+        'test_db_2' => array(
             'databasetype' => 'mysql',
             'host'   => 'localhost',
-            'name'   => 'cms',
+            'name'   => 'test2',
             'user'   => 'root',
             'pass'   => 'root',
-	    'track_patches_in_file'   => false,
+            'track_patches_in_file'   => false,
             'use_cli_client_for_reset' => false
         ),
-       /*  'test' => array(
-            //'driver' => 'mysql_database.php',
-            'databasetype' => 'mysql',
-            'host'   => 'localhost',
-            'name'   => 'peter_test',
-            'user'   => 'user',
-            'pass'   => 'secret',
-            'use_cli_client_for_reset' => false // true if base needs mysql client
-        ),*/
+        // can add more here for additional databases
     );
 }
