@@ -3,12 +3,16 @@
     "description": "Provides a database patching solution for handling incremental schema and data changes to a project's database.",
     "minimum-stability": "stable",
     "autoload": {
-        "psr-0": { "uarsoftware\\dbpatch\\": "" }
+        "psr-4": { "uarsoftware\\dbpatch\\": "src/" }
     },
     "authors": [
         {
             "name": "Up and Running Software",
             "email": "solutions@upandrunningsoftware.com"
         }
-    ]
+    ],
+    "require": {
+        "symfony/console": "2.6.*@dev"
+    }
+
 }
