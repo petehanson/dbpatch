@@ -86,4 +86,17 @@ class ConfigManagerTest extends \PHPUnit_Framework_TestCase
 
     }
 
+    public function testConfig() {
+        $base = 'base1';
+        $relative = 'cmtest';
+        $this->setupConfigFile($base,$relative);
+        $configPath = 'cmtest' . DIRECTORY_SEPARATOR . 'config.php';
+        $path = $this->configManager->configFullPath($configPath,$this->basePath . DIRECTORY_SEPARATOR . $base);
+
+        $config = $this->configManager->getConfig($path);
+
+        $this->tearDownConfigFile($base,$relative);
+        $this->assertInstanceOf('uarsoftware\dbpatch\App\ConfigInterface',$config);
+    }
+
 }

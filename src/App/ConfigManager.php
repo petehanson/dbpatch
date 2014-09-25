@@ -27,43 +27,11 @@ class ConfigManager {
         return $fullPath;
     }
 
-    public function addConfig(Config $config) {
-        $this->configs[$config->getID()] = $config;
-    }
-
-    public function addConfigsByArray(Array $list) {
-        foreach ($list as $config) {
-            $this->addConfig($config);
+    public function getConfig($path) {
+        if (!file_exists($path)) {
+            throw new \exception("Config file loading failed. Config file does not exist at {$path}");
         }
-    }
-
-    public function getConfigs() {
-        return $this->configs;
-    }
-
-    public function getConfig($id) {
-
-        if (array_key_exists($id,$this->configs)) {
-            return $this->configs[$id];
-        } else {
-            throw new exception("configuration {$id} doesn't exist in the configuration manager");
-        }
-
-    }
-
-    public function hasMultipleConfigs() {
-        if (count($this->configs) > 1) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public function hasValidConfig() {
-        if (count($this->configs) > 0) {
-            return true;
-        } else {
-            return false;
-        }
+        $config = require($path);
+        return $config;
     }
 }

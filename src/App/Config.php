@@ -2,7 +2,7 @@
 
 namespace uarsoftware\dbpatch\App;
 
-class Config {
+class Config implements ConfigInterface {
 
     protected $id;
 
