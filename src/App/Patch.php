@@ -2,7 +2,7 @@
 
 namespace uarsoftware\dbpatch\App;
 
-class Patch {
+class Patch implements PatchInterface{
 
     protected $patchName;
 

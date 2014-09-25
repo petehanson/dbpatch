@@ -4,11 +4,11 @@
 require_once("vendor/autoload.php");
 
 use uarsoftware\dbpatch\Command\TestCommand;
-use uarsoftware\dbpatch\Command\AddCommand;
+use uarsoftware\dbpatch\Command\PatchCommand;
 use Symfony\Component\Console\Application;
 
 $application = new Application();
 $application->add(new TestCommand);
-$application->add(new AddCommand);
+$application->add(new PatchCommand);
 $application->run();
 

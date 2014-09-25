@@ -44,8 +44,43 @@ class PatchManagerTest extends \PHPUnit_Framework_TestCase
 
     }
 
-    public function testPatchCount() {
-        //$patches = array("sql/schema/1test.sql","2test.sql");
-        //$this->assertCount(2,$this->pm->getPatches());
+    public function testSpecificPatchToApply() {
+        $patch = new Patch("1test.sql");
+        $this->pm->addSpecificPatchToApply($patch);
+        $unappliedPatches = $this->pm->getUnappliedPatches();
+        $this->assertCount(1,$unappliedPatches);
+        $this->assertEquals($patch,$unappliedPatches[0]);
+
+        $this->pm->resetSpecificPatchesToApply();
+        $unappliedPatches = $this->pm->getUnappliedPatches();
+        $this->assertCount(2,$unappliedPatches);
+
+
+        $this->pm->resetSpecificPatchesToApply();
+        $patch1 = new Patch("1test.sql");
+        $patch2 = new Patch("2test.sql");
+        $this->pm->addSpecificPatchToApply($patch1);
+        $this->pm->addSpecificPatchToApply($patch2);
+        $unappliedPatches = $this->pm->getUnappliedPatches();
+        $this->assertCount(2,$unappliedPatches);
+
+        $this->pm->resetSpecificPatchesToApply();
+        $patch1 = new Patch("1test.sql");
+        $patch2 = new Patch("2test.sql");
+        $patches = array($patch1,$patch2);
+        $this->pm->addSpecificPatchesToApply($patches);
+        $unappliedPatches = $this->pm->getUnappliedPatches();
+        $this->assertCount(2,$unappliedPatches);
+    }
+
+    public function testCreatePatchList() {
+        $patches = array("10test.sql","11test.sql");
+
+        $patchObjects = $this->pm->createPatchList($patches);
+
+        $this->assertCount(2,$patchObjects);
+        foreach ($patchObjects as $patch) {
+            $this->assertInstanceOf('uarsoftware\dbpatch\App\Patch',$patch);
+        }
     }
 }
