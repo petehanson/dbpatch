@@ -3,6 +3,7 @@
 namespace uarsoftware\dbpatch\Command;
 
 use uarsoftware\dbpatch\App\Config;
+use uarsoftware\dbpatch\App\ConfigManager;
 use uarsoftware\dbpatch\App\Database;
 use uarsoftware\dbpatch\App\DatabaseInterface;
 use uarsoftware\dbpatch\App\PatchManager;
@@ -45,8 +46,14 @@ class PatchCommand extends Command {
 
         $output->writeln("Patch");
 
+        $config = $this->determineConfig($input->getOption("config"),$executableBasepath);
+
+
+        /*
         $configFile = $input->getOption("config");
         echo $configFile;
+        */
+
         $patches = $input->getArgument("patches");
 
         $config = new Config("test","mysql","localhost","test","root","root");
@@ -64,5 +71,22 @@ class PatchCommand extends Command {
         $patchEngine->applyPatches($patchManager);
 
 
+    }
+
+    protected function determineConfig($configOption,$dbPatchBasePath) {
+        $cm = new ConfigManager();
+
+        var_dump($configOption);
+
+        if ($configOption) {
+            $path = $cm->configFullPath($configOption,$dbPatchBasePath);
+        } else {
+            $path = $cm->findConfigFile($dbPatchBasePath);
+        }
+
+        echo $path . "\n";
+
+        $config = $cm->getConfig($path);
+        return $config;
     }
 }
