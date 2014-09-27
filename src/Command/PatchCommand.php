@@ -44,47 +44,34 @@ class PatchCommand extends Command {
 
         $executableBasepath = getcwd();
 
-        $output->writeln("Patch");
+        //$output->writeln("Executing patch");
 
-        $config = $this->determineConfig($input->getOption("config"),$executableBasepath);
-
-
-        /*
-        $configFile = $input->getOption("config");
-        echo $configFile;
-        */
+        $config = $this->determineConfig($input,$output,$executableBasepath);
+        $db = new Database($config);
 
         $patches = $input->getArgument("patches");
 
-        $config = new Config("test","mysql","localhost","test","root","root");
-        $config->setBasePath(dirname(dirname(dirname(__FILE__))) . DIRECTORY_SEPARATOR . 'test');
-
-        $db = new Database($config);
-
         $patchManager = new PatchManager($config,$db);
-
         $specificPatchesList = $patchManager->createPatchList($patches);
         $patchManager->addSpecificPatchesToApply($specificPatchesList);
 
 
         $patchEngine = new PatchEngine($config,$db,$output);
         $patchEngine->applyPatches($patchManager);
-
-
     }
 
-    protected function determineConfig($configOption,$dbPatchBasePath) {
+    protected function determineConfig(InputInterface $input,OutputInterface $output,$dbPatchBasePath) {
+
+        $configOption = $input->getOption("config");
+
         $cm = new ConfigManager();
-
-        var_dump($configOption);
-
         if ($configOption) {
             $path = $cm->configFullPath($configOption,$dbPatchBasePath);
         } else {
             $path = $cm->findConfigFile($dbPatchBasePath);
         }
 
-        echo $path . "\n";
+        $output->writeln("<info>Using config: {$path}</info>");
 
         $config = $cm->getConfig($path);
         return $config;

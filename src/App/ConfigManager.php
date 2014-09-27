@@ -12,8 +12,9 @@ class ConfigManager {
 
     public function configFullPath($configPath,$basePath) {
 
-        if (file_exists($configPath)) {
-            return $configPath;
+        $fullPath = realpath($configPath);
+        if ($fullPath !== false) {
+            return $fullPath;
         }
 
         $fullPath = $basePath . DIRECTORY_SEPARATOR . $configPath;
