@@ -16,7 +16,13 @@ class PatchEngine {
     }
 
     public function applyPatches(PatchManager $patchManager) {
-        $patches = $patchManager->getPatches();
+        // get the unapplied patches
+
+        $unappliedPatches = $patchManager->getUnappliedPatches();
+
+        // apply each patch to the DB
+
+        return count($unappliedPatches);
     }
 
 }

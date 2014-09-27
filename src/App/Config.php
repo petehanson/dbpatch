@@ -57,6 +57,7 @@ class Config implements ConfigInterface {
 
         $this->standardizedTimezone = "UTC";
         $this->rootLevelCommands = array( "EVENT", "TRIGGER", "DROP DATABASE", "SHUTDOWN", "FILE", "GRANT", "CREATE USER", "REVOKE" );
+
     }
 
 

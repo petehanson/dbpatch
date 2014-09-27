@@ -14,6 +14,8 @@ require_once($base_dir . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 
 use uarsoftware\dbpatch\App\Config;
 use uarsoftware\dbpatch\App\Patch;
 use uarsoftware\dbpatch\App\DatabaseInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Formatter\OutputFormatterInterface;
 
 
 class TestFiles {
@@ -125,4 +127,20 @@ class MockDatabase implements DatabaseInterface {
         return $this->appliedPatches;
     }
 
+}
+
+
+
+class MockOutput implements OutputInterface {
+
+    public function write($messages, $newline = false, $type = self::OUTPUT_NORMAL) {}
+
+    public function writeln($messages, $type = self::OUTPUT_NORMAL) {}
+
+    public function setVerbosity($level) {}
+    public function getVerbosity() {}
+    public function setDecorated($decorated) {}
+    public function isDecorated() {}
+    public function setFormatter(OutputFormatterInterface $formatter) {}
+    public function getFormatter() {}
 }

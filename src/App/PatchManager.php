@@ -116,9 +116,4 @@ class PatchManager implements PatchManagerInterface {
         return $newUnappliedPatches;
 
     }
-
-    public function getPatches() {
-        return $this->patches;
-    }
-
 }

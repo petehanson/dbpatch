@@ -49,9 +49,12 @@ class PatchCommand extends Command {
         $config = $this->determineConfig($input,$output,$executableBasepath);
         $db = new Database($config);
 
-        $patches = $input->getArgument("patches");
 
         $patchManager = new PatchManager($config,$db);
+
+        // get any specific patches to apply
+        // we'd filter on just these patches based on any that haven't been applied, determined by patch manager
+        $patches = $input->getArgument("patches");
         $specificPatchesList = $patchManager->createPatchList($patches);
         $patchManager->addSpecificPatchesToApply($specificPatchesList);
 

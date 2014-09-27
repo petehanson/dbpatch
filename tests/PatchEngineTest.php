@@ -7,44 +7,45 @@ namespace uarsoftware\dbpatch\App;
 class PatchEngineTest extends \PHPUnit_Framework_TestCase
 {
 
+    protected $pm;
+    protected $db;
     protected $config;
     protected $app;
 
     public function setUp() {
+
+        \TestFiles::setUpFiles();
+
         $this->config = new Config("test","mysql","localhost","test","root","root");
+        $this->config->setBasePath("/tmp");
+
+        $this->db = new \MockDatabase($this->config);
+        $this->db->setAppliedPatches(array("3test.sql"));
+        $this->pm = new PatchManager($this->config,$this->db);
+
+
+        $output = new \MockOutput();
+
+        $this->app = new PatchEngine($this->config,$this->db,$output);
     }
 
     public function tearDown() {
         //$this->config = null;
+
+        \TestFiles::tearDownFiles();
+
+        $this->config = null;
+        $this->db = nul;
+        $this->pm = null;
+        $this->app = null;
     }
 
     public function testInitialization() {
+        $this->assertInstanceOf('uarsoftware\dbpatch\App\PatchEngine',$this->app);
     }
 
-    /*
-    public function testDSN() {
+    public function testApplyPatches() {
 
-        $this->config->setPort(3306);
-
-        $this->assertEquals("mysql:host=localhost;port=3306;dbname=test_db",$this->config->getDSN());
-
-        $this->config->setPort("");
-
-        $this->assertEquals("mysql:host=localhost;dbname=test_db",$this->config->getDSN());
+        $this->assertEquals(2,$this->app->applyPatches($this->pm));
     }
-
-    public function testRootLevelCommands() {
-
-        $this->config->resetRootLevelCommands();
-
-        $this->assertCount(0,$this->config->getRootLevelCommands());
-
-        $this->config->addRootLevelCommands("FOO");
-        $this->assertCount(1,$this->config->getRootLevelCommands());
-
-        $this->config->addRootLevelCommands(array("BAR","BAZ"));
-        $this->assertCount(3,$this->config->getRootLevelCommands());
-
-    }
-    */
 }
