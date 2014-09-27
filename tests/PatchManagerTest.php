@@ -16,7 +16,7 @@ class PatchManagerTest extends \PHPUnit_Framework_TestCase
 
     public function setUp() {
 
-        setUpFiles("/tmp");
+        \TestFiles::setUpFiles();
 
         $this->config = new Config("test","mysql","localhost","test","root","root");
         $this->config->setBasePath("/tmp");
@@ -31,7 +31,7 @@ class PatchManagerTest extends \PHPUnit_Framework_TestCase
 
         $this->pm = null;
 
-        tearDownFiles("/tmp");
+        \TestFiles::tearDownFiles();
     }
 
     public function testInstantiation() {

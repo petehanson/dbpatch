@@ -17,4 +17,17 @@ class Util {
         }
         return DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, $absolutes);
     }
+
+    public static function recursiveDirectoryFileSearch($startingDirectory,$searchFile) {
+
+        $objects = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($startingDirectory), \RecursiveIteratorIterator::SELF_FIRST);
+        foreach($objects as $name => $object){
+            if ($object->getFilename() == $searchFile) {
+                return $object->getPathname();
+            }
+
+        }
+
+        return false;
+    }
 }

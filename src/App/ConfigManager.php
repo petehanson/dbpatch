@@ -27,6 +27,16 @@ class ConfigManager {
         return $fullPath;
     }
 
+    public function findConfigFile($rootPath,$configFileName = 'config.php') {
+        $result = Util::recursiveDirectoryFileSearch($rootPath,$configFileName);
+
+        if ($result === false) {
+            throw new \exception("Could not find a file at {$rootPath} called {$configFileName}");
+        }
+
+        return $result;
+    }
+
     public function getConfig($path) {
         if (!file_exists($path)) {
             throw new \exception("Config file loading failed. Config file does not exist at {$path}");

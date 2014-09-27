@@ -6,50 +6,16 @@ namespace uarsoftware\dbpatch\App;
 
 class ConfigManagerTest extends \PHPUnit_Framework_TestCase
 {
-
-    protected $basePath;
     protected $configManager;
 
     public function setUp() {
-
-        $this->basePath = realpath('/tmp');
-        if ($this->basePath === false) {
-            throw new exception("realpath() couldn't determine the proper basePath to use");
-        }
-
+        \TestFiles::setUpFiles();
         $this->configManager = new ConfigManager();
     }
 
     public function tearDown() {
         $this->configManager = null;
-    }
-
-    protected function setupConfigFile($cwdPath,$relativePath,$configFile = 'config.php') {
-        $targetPath = $this->basePath . DIRECTORY_SEPARATOR . $cwdPath . DIRECTORY_SEPARATOR . $relativePath;
-        $targetFile = $targetPath . DIRECTORY_SEPARATOR . $configFile;
-        $sourceFile = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'ConfigManagerTest' . DIRECTORY_SEPARATOR . $configFile;
-        if (!file_exists($targetPath)) {
-            mkdir($targetPath,0777,true);
-        }
-        $result = copy($sourceFile,$targetFile);
-
-        if ($result === false) {
-            throw new exception("Copy failed from {$sourceFile} to {$targetFile}");
-        }
-    }
-
-    protected function tearDownConfigFile($cwdPath,$relativePath,$configFile = 'config.php') {
-        $targetPath = $this->basePath . DIRECTORY_SEPARATOR . $cwdPath . DIRECTORY_SEPARATOR . $relativePath;
-        $targetFile = $targetPath . DIRECTORY_SEPARATOR . $configFile;
-
-        unlink($targetFile);
-
-        $tempPath = $targetPath;
-        do {
-            rmdir($tempPath);
-            $tempPath = dirname($tempPath);
-        } while($tempPath != $this->basePath);
-
+        \TestFiles::tearDownFiles();
     }
 
     public function testInitialization() {
@@ -58,45 +24,41 @@ class ConfigManagerTest extends \PHPUnit_Framework_TestCase
 
     public function testConfigFileFullPath() {
 
-        $base = 'base1';
-        $relative = 'cmtest';
-        $this->setupConfigFile($base,$relative);
-        $configPath = 'cmtest' . DIRECTORY_SEPARATOR . 'config.php';
-        $path = $this->configManager->configFullPath($configPath,$this->basePath . DIRECTORY_SEPARATOR . $base);
-        $this->tearDownConfigFile($base,$relative);
-        $this->assertEquals($this->basePath . DIRECTORY_SEPARATOR . 'base1/cmtest/config.php',$path);
+        // test just the concatination of the base dir and the relative path to the config
+        $configPath = normalizeDirectory('level1/level1.php');
+        $path = $this->configManager->configFullPath($configPath,\TestFiles::$baseDir);
+        $this->assertEquals(normalizeDirectory(\TestFiles::$baseDir . '/level1/level1.php'),$path);
+
+        // test just the concatination of the base dir and the relative path to the config, but also expanding .. and . operations
+        $configPath = normalizeDirectory('./../level2/level2.php');
+        $path = $this->configManager->configFullPath($configPath,normalizeDirectory(\TestFiles::$baseDir . '/level1/baddir'));
+        $this->assertEquals(normalizeDirectory(\TestFiles::$baseDir . '/level1/level2/level2.php'),$path);
+
+        // test passing a full reference to an actual config file
+        $configPath = normalizeDirectory(\TestFiles::$baseDir . '/level1/level1.php');
+        $path = $this->configManager->configFullPath($configPath,normalizeDirectory(\TestFiles::$baseDir . '/level1/baddir'));
+        $this->assertEquals(normalizeDirectory(\TestFiles::$baseDir . '/level1/level1.php'),$path);
+    }
+
+    public function testFindConfigFile() {
+        $rootPath = normalizeDirectory(\TestFiles::$baseDir . '/level1');
+
+        $configPath = $this->configManager->findConfigFile($rootPath);
+        $this->assertEquals(normalizeDirectory(\TestFiles::$baseDir . '/level1/level2/config.php'),$configPath);
 
 
-        $base = 'base1/base2';
-        $relative = 'cmtest';
-        $this->setupConfigFile($base,$relative);
-        $configPath = '../cmtest' . DIRECTORY_SEPARATOR . 'config.php';
-        $path = $this->configManager->configFullPath($configPath,$this->basePath . DIRECTORY_SEPARATOR . $base . DIRECTORY_SEPARATOR . 'base3');
-        $this->tearDownConfigFile($base,$relative);
-        $this->assertEquals($this->basePath . DIRECTORY_SEPARATOR . 'base1/base2/cmtest/config.php',$path);
-
-        $base = 'base1';
-        $relative = 'cmtest';
-        $this->setupConfigFile($base,$relative);
-        $configPath = $this->basePath . DIRECTORY_SEPARATOR . $base . DIRECTORY_SEPARATOR . 'cmtest' . DIRECTORY_SEPARATOR . 'config.php';
-        $path = $this->configManager->configFullPath($configPath,$this->basePath . DIRECTORY_SEPARATOR . 'garbage');
-        $this->tearDownConfigFile($base,$relative);
-        $this->assertEquals($this->basePath . DIRECTORY_SEPARATOR . 'base1/cmtest/config.php',$path);
-
+        $configFileName = 'level2.php';
+        $configPath = $this->configManager->findConfigFile($rootPath,$configFileName);
+        $this->assertEquals(normalizeDirectory(\TestFiles::$baseDir . '/level1/level2/level2.php'),$configPath);
 
     }
 
     public function testConfig() {
-        $base = 'base1';
-        $relative = 'cmtest';
-        $this->setupConfigFile($base,$relative);
-        $configPath = 'cmtest' . DIRECTORY_SEPARATOR . 'config.php';
-        $path = $this->configManager->configFullPath($configPath,$this->basePath . DIRECTORY_SEPARATOR . $base);
-
+        $configPath = normalizeDirectory(\TestFiles::$baseDir . '/level1/level1.php');
+        $path = $this->configManager->configFullPath($configPath,normalizeDirectory(\TestFiles::$baseDir . '/level1/baddir'));
         $config = $this->configManager->getConfig($path);
-
-        $this->tearDownConfigFile($base,$relative);
         $this->assertInstanceOf('uarsoftware\dbpatch\App\ConfigInterface',$config);
+
     }
 
 }
