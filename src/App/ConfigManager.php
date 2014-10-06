@@ -18,7 +18,7 @@ class ConfigManager {
         }
 
         $fullPath = $basePath . DIRECTORY_SEPARATOR . $configPath;
-        $fullPath = Util::get_absolute_path($fullPath);
+        $fullPath = Util::getAbsolutePath($fullPath);
         $fullPath = realpath($fullPath);
 
         if ($fullPath === false) {

@@ -22,7 +22,24 @@ class PatchEngine {
 
         // apply each patch to the DB
 
-        return count($unappliedPatches);
+        $appliedPatches = array();
+
+        foreach ($unappliedPatches as $patch) {
+
+            $this->output->writeln("Applying patch: " . $patch->getBasename());
+
+            $patch = $patchManager->applyPatch($patch);
+
+
+
+            if ($patch->isSuccessful()) {
+                $this->output->writeln("Patch " . $patch->getBaseName() . " successful");
+            }
+
+            array_push($appliedPatches,$patch);
+        }
+
+        return count($appliedPatches);
     }
 
 }

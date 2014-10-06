@@ -19,7 +19,7 @@ class PatchManagerTest extends \PHPUnit_Framework_TestCase
         \TestFiles::setUpFiles();
 
         $this->config = new Config("test","mysql","localhost","test","root","root");
-        $this->config->setBasePath("/tmp");
+        $this->config->setBasePath(realpath("/tmp"));
 
         $db = new \MockDatabase($this->config);
         $db->setAppliedPatches(array("3test.sql"));
@@ -45,7 +45,7 @@ class PatchManagerTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testSpecificPatchToApply() {
-        $patch = new Patch("1test.sql");
+        $patch = new Patch(\TestFiles::$files[0]);
         $this->pm->addSpecificPatchToApply($patch);
         $unappliedPatches = $this->pm->getUnappliedPatches();
         $this->assertCount(1,$unappliedPatches);
@@ -57,16 +57,16 @@ class PatchManagerTest extends \PHPUnit_Framework_TestCase
 
 
         $this->pm->resetSpecificPatchesToApply();
-        $patch1 = new Patch("1test.sql");
-        $patch2 = new Patch("2test.sql");
+        $patch1 = new Patch(\TestFiles::$files[0]);
+        $patch2 = new Patch(\TestFiles::$files[1]);
         $this->pm->addSpecificPatchToApply($patch1);
         $this->pm->addSpecificPatchToApply($patch2);
         $unappliedPatches = $this->pm->getUnappliedPatches();
         $this->assertCount(2,$unappliedPatches);
 
         $this->pm->resetSpecificPatchesToApply();
-        $patch1 = new Patch("1test.sql");
-        $patch2 = new Patch("2test.sql");
+        $patch1 = new Patch(\TestFiles::$files[0]);
+        $patch2 = new Patch(\TestFiles::$files[1]);
         $patches = array($patch1,$patch2);
         $this->pm->addSpecificPatchesToApply($patches);
         $unappliedPatches = $this->pm->getUnappliedPatches();
@@ -83,4 +83,35 @@ class PatchManagerTest extends \PHPUnit_Framework_TestCase
             $this->assertInstanceOf('uarsoftware\dbpatch\App\Patch',$patch);
         }
     }
+
+    public function testApplyPatch() {
+
+        $files = \TestFiles::$files;
+        $patch = new Patch($files[0]);
+        $resultPatch = $this->pm->applyPatch($patch);
+
+        $this->assertTrue($resultPatch->isSuccessful());
+
+    }
+
+    public function testApplyPatchException() {
+
+        $this->setExpectedException('\exception');
+
+        $config = new Config("test","mysql","localhost","test","root","root");
+        $config->setBasePath(realpath("/tmp"));
+
+        $db = new \MockDatabase($config);
+        $db->queryFailed(100,"test");
+        $pm = new PatchManager($config,$db);
+
+
+        $files = \TestFiles::$files;
+        $patch = new Patch($files[0]);
+
+        $resultPatch = $pm->applyPatch($patch);
+
+
+    }
+
 }

@@ -53,7 +53,7 @@ class PatchManager implements PatchManagerInterface {
                     continue;
                 }
 
-                $patch = new Patch($file);
+                $patch = new Patch($fullPath);
                 $patches[] = $patch;
             }
 
@@ -102,7 +102,6 @@ class PatchManager implements PatchManagerInterface {
     }
 
     protected function filterSpecifiedPatches($unappliedPatches) {
-
         $newUnappliedPatches = array();
 
         foreach ($this->specificPatchesToApply as $specificPatch) {
@@ -116,4 +115,22 @@ class PatchManager implements PatchManagerInterface {
         return $newUnappliedPatches;
 
     }
+
+    public function applyPatch(PatchInterface $patch) {
+
+        $sqlStatements = $patch->getPatchStatements();
+
+        foreach ($sqlStatements as $sql) {
+            $result = $this->database->executeQuery($sql);
+
+            if ($result->status == false) {
+                $patch->setFailed($result->errorCode,$result->errorMessage);
+                throw new \exception($patch->getErrorCode() . ": " . $patch->getErrorMessage() . ",  executed query: " . $sql);
+            }
+        }
+
+        $patch->setSuccessful();
+        return $patch;
+    }
 }
+

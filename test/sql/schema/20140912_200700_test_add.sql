@@ -1,4 +1,4 @@
 create table mytest1 (
-	id int;
+	id int,
 	name varchar(255)
 );

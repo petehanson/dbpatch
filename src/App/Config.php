@@ -12,7 +12,9 @@ class Config implements ConfigInterface {
     protected $databaseName;
     protected $user;
     protected $password;
-    protected $trackPatchesInFile;
+    protected $appliedPatchesTableName;
+
+    protected $trackPatchesInFile; // not sure if I'll need this right away
 
 
     protected $basePath;
@@ -58,6 +60,23 @@ class Config implements ConfigInterface {
         $this->standardizedTimezone = "UTC";
         $this->rootLevelCommands = array( "EVENT", "TRIGGER", "DROP DATABASE", "SHUTDOWN", "FILE", "GRANT", "CREATE USER", "REVOKE" );
 
+        $this->setAppliedPatchesTableName("dbappliedpatches");
+    }
+
+    /**
+     * @param mixed $appliedPatchesTableName
+     */
+    public function setAppliedPatchesTableName($appliedPatchesTableName)
+    {
+        $this->appliedPatchesTableName = $appliedPatchesTableName;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getAppliedPatchesTableName()
+    {
+        return $this->appliedPatchesTableName;
     }
 
 

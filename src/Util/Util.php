@@ -3,7 +3,7 @@
 namespace uarsoftware\dbpatch\Util;
 
 class Util {
-    public static function get_absolute_path($path) {
+    public static function getAbsolutePath($path) {
         $path = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $path);
         $parts = array_filter(explode(DIRECTORY_SEPARATOR, $path), 'strlen');
         $absolutes = array();

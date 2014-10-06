@@ -8,11 +8,15 @@ if (TestFiles::$baseDir === false) {
     throw new exception("baseDir is invalid");
 }
 
+CLI::$mysqlBinary = 'mysql';
+CLI::$mysqlUser = 'root';
+CLI::$mysqlPass = 'root';
 
 require_once($base_dir . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php');
 
 use uarsoftware\dbpatch\App\Config;
 use uarsoftware\dbpatch\App\Patch;
+use uarsoftware\dbpatch\App\PatchInterface;
 use uarsoftware\dbpatch\App\DatabaseInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Formatter\OutputFormatterInterface;
@@ -21,6 +25,10 @@ use Symfony\Component\Console\Formatter\OutputFormatterInterface;
 class TestFiles {
 
     static public $baseDir;
+    static public $files;
+    static public $schemaPath;
+    static public $dataPath;
+    static public $scriptPath;
 
     public static function setUpFiles() {
 
@@ -31,9 +39,18 @@ class TestFiles {
         $dataPath = self::$baseDir . DIRECTORY_SEPARATOR . 'sql' . DIRECTORY_SEPARATOR . 'data';
         $scriptPath = self::$baseDir . DIRECTORY_SEPARATOR . 'sql' . DIRECTORY_SEPARATOR . 'script';
 
+        self::$schemaPath = $schemaPath;
+        self::$dataPath = $dataPath;
+        self::$scriptPath = $scriptPath;
+
         $file1 = $schemaPath . DIRECTORY_SEPARATOR . "1test.sql";
         $file2 = $schemaPath . DIRECTORY_SEPARATOR . "2test.sql";
         $file3 = $dataPath . DIRECTORY_SEPARATOR . "3test.sql";
+
+        self::$files = array();
+        self::$files[] = $file1;
+        self::$files[] = $file2;
+        self::$files[] = $file3;
 
         mkdir($sqlPath);
         mkdir($initPath);
@@ -110,15 +127,19 @@ function normalizeDirectory($dir) {
 class MockDatabase implements DatabaseInterface {
 
     protected $appliedPatches;
+    protected $queryResult;
 
     public function __construct(Config $config) {
         $this->appliedPatches = array();
+
+        $this->querySuccess();
     }
 
     public function setAppliedPatches(Array $list) {
         $this->appliedPatches = array();
         foreach ($list as $item) {
             $patch = new Patch($item);
+            $patch->setAsAppliedPatch();
             $this->appliedPatches[] = $patch;
         }
     }
@@ -127,6 +148,21 @@ class MockDatabase implements DatabaseInterface {
         return $this->appliedPatches;
     }
 
+    public function querySuccess() {
+        $this->queryResult = new stdClass();
+        $this->queryResult->status = true;
+    }
+
+    public function queryFailed($code,$message) {
+        $this->queryResult = new stdClass();
+        $this->queryResult->status = false;
+        $this->queryResult->errorCode = $code;
+        $this->queryResult->errorMessage = $message;
+    }
+
+    public function executeQuery($sql) {
+        return $this->queryResult;
+    }
 }
 
 
@@ -143,4 +179,11 @@ class MockOutput implements OutputInterface {
     public function isDecorated() {}
     public function setFormatter(OutputFormatterInterface $formatter) {}
     public function getFormatter() {}
+}
+
+
+class CLI {
+    static public $mysqlBinary;
+    static public $mysqlUser;
+    static public $mysqlPass;
 }

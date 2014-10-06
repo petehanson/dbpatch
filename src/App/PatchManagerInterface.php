@@ -9,4 +9,5 @@ interface PatchManagerInterface {
     public function addSpecificPatchToApply(PatchInterface $patch);
     public function resetSpecificPatchesToApply();
     public function getUnappliedPatches();
+    public function applyPatch(PatchInterface $patch);
 }
