@@ -46,9 +46,12 @@ class PatchCommand extends Command {
 
         //$output->writeln("Executing patch");
 
-        $config = $this->determineConfig($input,$output,$executableBasepath);
-        $db = new Database($config);
+        $cm = new ConfigManager();
+        $config = $cm->determineConfig($input->getOption("config"),$executableBasepath);
 
+        $output->writeln("<info>Using config: " . $config->getConfigFilePath() . "</info>");
+
+        $db = new Database($config);
 
         $patchManager = new PatchManager($config,$db);
 
@@ -61,22 +64,5 @@ class PatchCommand extends Command {
 
         $patchEngine = new PatchEngine($config,$db,$output);
         $patchEngine->applyPatches($patchManager);
-    }
-
-    protected function determineConfig(InputInterface $input,OutputInterface $output,$dbPatchBasePath) {
-
-        $configOption = $input->getOption("config");
-
-        $cm = new ConfigManager();
-        if ($configOption) {
-            $path = $cm->configFullPath($configOption,$dbPatchBasePath);
-        } else {
-            $path = $cm->findConfigFile($dbPatchBasePath);
-        }
-
-        $output->writeln("<info>Using config: {$path}</info>");
-
-        $config = $cm->getConfig($path);
-        return $config;
     }
 }

@@ -33,6 +33,9 @@ class Config implements ConfigInterface {
     protected $standardizedTimezone;
     protected $rootLevelCommands;
 
+    protected $configFilePath;
+
+
 
     public function __construct($id,$driver,$host,$databaseName,$user,$pass,$port = null) {
 
@@ -79,6 +82,21 @@ class Config implements ConfigInterface {
         return $this->appliedPatchesTableName;
     }
 
+    /**
+     * @param mixed $configFilePath
+     */
+    public function setConfigFilePath($configFilePath)
+    {
+        $this->configFilePath = $configFilePath;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getConfigFilePath()
+    {
+        return $this->configFilePath;
+    }
 
 
     public function getID() {

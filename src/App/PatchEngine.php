@@ -15,6 +15,10 @@ class PatchEngine {
         $this->output = $output;
     }
 
+    public function determineConfig($dbPatchBasePath,$configOption) {
+
+    }
+
     public function applyPatches(PatchManager $patchManager) {
         // get the unapplied patches
 

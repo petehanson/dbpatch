@@ -10,6 +10,20 @@ class ConfigManager {
     public function __construct() {
     }
 
+    public function determineConfig($configOption,$dbPatchBasePath) {
+
+        if ($configOption) {
+            $path = $this->configFullPath($configOption,$dbPatchBasePath);
+        } else {
+            $path = $this->findConfigFile($dbPatchBasePath);
+        }
+
+
+        $config = $this->getConfig($path);
+        $config->setConfigFilePath($path);
+        return $config;
+    }
+
     public function configFullPath($configPath,$basePath) {
 
         $fullPath = realpath($configPath);
