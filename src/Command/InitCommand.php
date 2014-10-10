@@ -14,7 +14,7 @@ class InitCommand extends Command {
 
     protected function configure() {
         $this->setName("init");
-        $this->setDescription("Creates the folder arrangement for a new configuration and a base config file.");
+        $this->setDescription("Creates the folder arrangement for a new configuration and a base config file");
 
         $this->addArgument(
             'configpath',
