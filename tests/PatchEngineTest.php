@@ -48,4 +48,14 @@ class PatchEngineTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(5,$this->app->applyPatches($this->pm));
     }
+
+    public function testRecordPatches() {
+        $patches = array();
+        $patches[] = new Patch(\TestFiles::$files[0]);
+        $patches[] = new Patch(\TestFiles::$files[1]);
+
+        $this->assertCount(2,$this->app->recordPatches($patches));
+
+
+    }
 }

@@ -56,4 +56,18 @@ class PatchEngine {
         return count($appliedPatches);
     }
 
+    public function recordPatches(Array $patches) {
+
+        $recordedPatches = array();
+
+        foreach ($patches as $patch) {
+            $this->db->recordPatch($patch);
+            array_push($recordedPatches,$patch);
+
+            $this->output->writeln("Recording patch " . $patch->getBaseName());
+        }
+
+        return $recordedPatches;
+    }
+
 }
