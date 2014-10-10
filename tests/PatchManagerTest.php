@@ -139,4 +139,13 @@ class PatchManagerTest extends \PHPUnit_Framework_TestCase
 
     }
 
+    public function testCreatePatch() {
+        $description = "A test description";
+        $filename = $this->pm->createSchemaPatchFile($description);
+        $this->assertTrue(file_exists($filename));
+
+        unlink($filename);
+
+    }
+
 }

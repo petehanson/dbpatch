@@ -135,5 +135,23 @@ class PatchManager implements PatchManagerInterface {
         $patch->setSuccessful();
         return $patch;
     }
+
+    public function createSchemaPatchFile($description,$extension = "sql") {
+        $returnFileName = "";
+        $description = $this->normalizeDescription($description);
+
+        $returnFileName = $description . '.' . $extension;
+
+        $path = $this->config->getSchemaPath();
+
+        $fullPath = $path . DIRECTORY_SEPARATOR . $returnFileName;
+        touch($fullPath);
+
+        return $fullPath;
+    }
+
+    protected function normalizeDescription($description) {
+        return preg_replace("/[^\w]/","_",$description);
+    }
 }
 

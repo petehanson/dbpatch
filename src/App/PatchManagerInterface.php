@@ -10,4 +10,5 @@ interface PatchManagerInterface {
     public function resetSpecificPatchesToApply();
     public function getUnappliedPatches();
     public function applyPatch(PatchInterface $patch);
+    public function createSchemaPatchFile($description);
 }
