@@ -17,7 +17,7 @@ class DatabaseTest extends \PHPUnit_Framework_TestCase
 
     public function setUp() {
 
-        $this->dbname = "test" . $this->generateRandomString();
+        $this->dbname = "test" . \BootstrapUtil::generateRandomString();
 
         $this->runCliCommand("create database " . $this->dbname,false);
 
@@ -93,12 +93,12 @@ class DatabaseTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(1,$data['id']);
     }
 
-    protected function generateRandomString($length = 8) {
-        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        $randomString = '';
-        for ($i = 0; $i < $length; $i++) {
-            $randomString .= $characters[rand(0, strlen($characters) - 1)];
-        }
-        return $randomString;
+    public function testRecordPatch() {
+        $patch = new Patch("test_patch");
+        $this->assertTrue($this->db->recordPatch($patch));
+
+        $appliedPatches = $this->db->getAppliedPatches();
+        $this->assertCount(3,$appliedPatches);
+
     }
 }

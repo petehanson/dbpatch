@@ -37,10 +37,12 @@ class PatchEngine {
 
 
             if ($patch->isSuccessful()) {
+                $this->db->recordPatch($patch);
+                array_push($appliedPatches,$patch);
+
                 $this->output->writeln("Patch " . $patch->getBaseName() . " successful");
             }
 
-            array_push($appliedPatches,$patch);
         }
 
         return count($appliedPatches);

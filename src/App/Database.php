@@ -88,4 +88,17 @@ class Database extends \PDO implements DatabaseInterface{
 
         return $result;
     }
+
+    public function recordPatch(PatchInterface $patch) {
+        $statement = $this->prepare("INSERT INTO " . $this->appliedPatchesTable . " (applied_patch) VALUES (:patch)");
+        $statement->bindValue(':patch',$patch->getBaseName(),\PDO::PARAM_STR);
+
+        $result = $statement->execute();
+
+        if ($result == false) {
+            throw new exception("Error occurred when recording " . $patch->getBaseName());
+        }
+
+        return $result;
+    }
 }

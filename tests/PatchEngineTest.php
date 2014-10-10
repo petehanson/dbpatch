@@ -46,6 +46,6 @@ class PatchEngineTest extends \PHPUnit_Framework_TestCase
 
     public function testApplyPatches() {
 
-        $this->assertEquals(2,$this->app->applyPatches($this->pm));
+        $this->assertEquals(5,$this->app->applyPatches($this->pm));
     }
 }

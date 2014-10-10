@@ -59,4 +59,44 @@ class ConfigManager {
         $config = require($path);
         return $config;
     }
+
+    public function createConfigFolders($rootPath,$configDir) {
+        $path = $rootPath . DIRECTORY_SEPARATOR . $configDir;
+        $path = Util::getAbsolutePath($path);
+
+        if (!file_exists($path)) {
+            mkdir($path);
+        }
+
+        $configFile = $path . DIRECTORY_SEPARATOR . "config.php";
+
+        $contents = <<<'EOF'
+<?php
+
+$myconfig = new uarsoftware\dbpatch\App\Config("myconfigid","mysql","localhost","mydbname","myuser","mypass");
+$myconfig->setPort(3306);
+$myconfig->disableTrackingPatchesInFile();
+$myconfig->setConfigFilePath(__FILE__);
+$myconfig->setBasePath(dirname(__FILE__));
+
+return $myconfig;
+EOF;
+
+        if (!file_exists($configFile)) {
+            file_put_contents($configFile,$contents);
+        }
+
+        $sqlPath = $path . DIRECTORY_SEPARATOR . "sql";
+        if (!file_exists($sqlPath)) mkdir($sqlPath);
+        $sqlPath = $path . DIRECTORY_SEPARATOR . "sql" . DIRECTORY_SEPARATOR . "init";
+        if (!file_exists($sqlPath)) mkdir($sqlPath);
+        $sqlPath = $path . DIRECTORY_SEPARATOR . "sql" . DIRECTORY_SEPARATOR . "schema";
+        if (!file_exists($sqlPath)) mkdir($sqlPath);
+        $sqlPath = $path . DIRECTORY_SEPARATOR . "sql" . DIRECTORY_SEPARATOR . "data";
+        if (!file_exists($sqlPath)) mkdir($sqlPath);
+        $sqlPath = $path . DIRECTORY_SEPARATOR . "sql" . DIRECTORY_SEPARATOR . "script";
+        if (!file_exists($sqlPath)) mkdir($sqlPath);
+
+        return $path;
+    }
 }

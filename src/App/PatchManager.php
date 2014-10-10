@@ -65,7 +65,10 @@ class PatchManager implements PatchManagerInterface {
         $this->filesystemScriptPatches = $processType($this->config->getScriptPath());
 
         $this->filesystemPatches = array_merge($this->filesystemSchemaPatches,$this->filesystemDataPatches,$this->filesystemScriptPatches);
-        sort($this->filesystemPatches);
+        //sort($this->filesystemPatches);
+        usort($this->filesystemPatches,function($a,$b) {
+            return strcmp($a->getBaseName(),$b->getBaseName());
+        });
 
     }
 

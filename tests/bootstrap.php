@@ -46,11 +46,17 @@ class TestFiles {
         $file1 = $schemaPath . DIRECTORY_SEPARATOR . "1test.sql";
         $file2 = $schemaPath . DIRECTORY_SEPARATOR . "2test.sql";
         $file3 = $dataPath . DIRECTORY_SEPARATOR . "3test.sql";
+        $file4 = $dataPath . DIRECTORY_SEPARATOR . "20141009_123456_test4.sql";
+        $file5 = $schemaPath . DIRECTORY_SEPARATOR . "20141008_114523_test5.sql";
+        $file6 = $schemaPath . DIRECTORY_SEPARATOR . "20141009_140000_test6.sql";
 
         self::$files = array();
         self::$files[] = $file1;
         self::$files[] = $file2;
         self::$files[] = $file3;
+        self::$files[] = $file4;
+        self::$files[] = $file5;
+        self::$files[] = $file6;
 
         mkdir($sqlPath);
         mkdir($initPath);
@@ -61,6 +67,9 @@ class TestFiles {
         file_put_contents($file1,"create table mytest2 (id int);");
         file_put_contents($file2,"alter table mytest2 add name char(1);");
         file_put_contents($file3,"insert into mytest2 values (1,'a');");
+        file_put_contents($file4,"");
+        file_put_contents($file5,"");
+        file_put_contents($file6,"");
 
         // set up some test dirs for configFullPath loading
         mkdir(normalizeDirectory(self::$baseDir . '/level1'),0777,true);
@@ -81,14 +90,27 @@ class TestFiles {
         $dataPath = self::$baseDir . DIRECTORY_SEPARATOR . 'sql' . DIRECTORY_SEPARATOR . 'data';
         $scriptPath = self::$baseDir . DIRECTORY_SEPARATOR . 'sql' . DIRECTORY_SEPARATOR . 'script';
 
+        /*
         $file1 = $schemaPath . DIRECTORY_SEPARATOR . "1test.sql";
         $file2 = $schemaPath . DIRECTORY_SEPARATOR . "2test.sql";
         $file3 = $dataPath . DIRECTORY_SEPARATOR . "3test.sql";
+        $file4 = $dataPath . DIRECTORY_SEPARATOR . "20141009_123456_test4.sql";
+        $file5 = $dataPath . DIRECTORY_SEPARATOR . "20141008_114523_test5.sql";
+        $file6 = $dataPath . DIRECTORY_SEPARATOR . "20141009_140000_test6.sql";
+        */
 
+        foreach (self::$files as $file) {
+            unlink($file);
+        }
 
+        /*
+        unlink($file6);
+        unlink($file5);
+        unlink($file4);
         unlink($file3);
         unlink($file2);
         unlink($file1);
+        */
 
         rmdir($scriptPath);
         rmdir($dataPath);
@@ -113,6 +135,8 @@ class TestFiles {
         $test_config = new \uarsoftware\dbpatch\App\Config("test","mysql","localhost","test","root","root");
         $test_config->setPort(3306);
         $test_config->disableTrackingPatchesInFile();
+        $test_config->setConfigFilePath(__FILE__);
+        $test_config->setBasePath(dirname(__FILE__));
 
         return $test_config;';
 
@@ -163,6 +187,10 @@ class MockDatabase implements DatabaseInterface {
     public function executeQuery($sql) {
         return $this->queryResult;
     }
+
+    public function recordPatch(PatchInterface $patch) {
+        return true;
+    }
 }
 
 
@@ -186,4 +214,16 @@ class CLI {
     static public $mysqlBinary;
     static public $mysqlUser;
     static public $mysqlPass;
+}
+
+class BootstrapUtil {
+
+    static public function generateRandomString($length = 8) {
+        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $randomString = '';
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[rand(0, strlen($characters) - 1)];
+        }
+        return $randomString;
+    }
 }

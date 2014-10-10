@@ -61,4 +61,36 @@ class ConfigManagerTest extends \PHPUnit_Framework_TestCase
 
     }
 
+    public function testConfigCreation() {
+
+        $folder = "test" . \BootstrapUtil::generateRandomString();
+        $result = $this->configManager->createConfigFolders(\TestFiles::$baseDir,$folder);
+        $this->assertTrue($result);
+
+        $path = \TestFiles::$baseDir . DIRECTORY_SEPARATOR . $folder;
+
+        $configPath =  $path . DIRECTORY_SEPARATOR . "config.php";
+        $this->assertTrue(file_exists($configPath));
+        unlink($configPath);
+
+        $sqlPath = $path . DIRECTORY_SEPARATOR . "sql" . DIRECTORY_SEPARATOR . "init";
+        $this->assertTrue(file_exists($sqlPath));
+        rmdir($sqlPath);
+        $sqlPath = $path . DIRECTORY_SEPARATOR . "sql" . DIRECTORY_SEPARATOR . "schema";
+        $this->assertTrue(file_exists($sqlPath));
+        rmdir($sqlPath);
+        $sqlPath = $path . DIRECTORY_SEPARATOR . "sql" . DIRECTORY_SEPARATOR . "data";
+        $this->assertTrue(file_exists($sqlPath));
+        rmdir($sqlPath);
+        $sqlPath = $path . DIRECTORY_SEPARATOR . "sql" . DIRECTORY_SEPARATOR . "script";
+        $this->assertTrue(file_exists($sqlPath));
+        rmdir($sqlPath);
+
+        $sqlPath = $path . DIRECTORY_SEPARATOR . "sql";
+        $this->assertTrue(file_exists($sqlPath));
+        rmdir($sqlPath);
+
+        rmdir($path);
+    }
+
 }

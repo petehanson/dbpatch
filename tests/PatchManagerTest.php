@@ -40,7 +40,7 @@ class PatchManagerTest extends \PHPUnit_Framework_TestCase
 
     public function testPatchDifference() {
         $unappliedPatches = $this->pm->getUnappliedPatches();
-        $this->assertCount(2,$unappliedPatches);
+        $this->assertCount(5,$unappliedPatches);
 
     }
 
@@ -53,7 +53,7 @@ class PatchManagerTest extends \PHPUnit_Framework_TestCase
 
         $this->pm->resetSpecificPatchesToApply();
         $unappliedPatches = $this->pm->getUnappliedPatches();
-        $this->assertCount(2,$unappliedPatches);
+        $this->assertCount(5,$unappliedPatches);
 
 
         $this->pm->resetSpecificPatchesToApply();
@@ -71,6 +71,31 @@ class PatchManagerTest extends \PHPUnit_Framework_TestCase
         $this->pm->addSpecificPatchesToApply($patches);
         $unappliedPatches = $this->pm->getUnappliedPatches();
         $this->assertCount(2,$unappliedPatches);
+    }
+
+    public function testPatchOrder() {
+        $unappliedPatches = $this->pm->getUnappliedPatches();
+
+        $correct_order = array();
+        $correct_order[] = new Patch(\TestFiles::$files[0]);
+        $correct_order[] = new Patch(\TestFiles::$files[4]);
+        $correct_order[] = new Patch(\TestFiles::$files[3]);
+        $correct_order[] = new Patch(\TestFiles::$files[5]);
+        $correct_order[] = new Patch(\TestFiles::$files[1]);
+
+        //print_r($unappliedPatches);
+        //print_r($correct_order);
+
+        $this->assertEquals($correct_order[0],$unappliedPatches[0]);
+        $this->assertEquals($correct_order[1],$unappliedPatches[1]);
+        $this->assertEquals($correct_order[2],$unappliedPatches[2]);
+        $this->assertEquals($correct_order[3],$unappliedPatches[3]);
+        $this->assertEquals($correct_order[4],$unappliedPatches[4]);
+
+
+
+
+
     }
 
     public function testCreatePatchList() {
