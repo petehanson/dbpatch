@@ -19,7 +19,15 @@ class PatchEngine {
 
     }
 
-    public function applyPatches(PatchManager $patchManager) {
+    public function viewUnappliedPatches(PatchManagerInterface $patchManager) {
+        $unappliedPatches = $patchManager->getUnappliedPatches();
+        $this->output->writeln("Patches to apply:");
+        foreach ($unappliedPatches as $patch) {
+            $this->output->writeln($patch->getBasename());
+        }
+    }
+
+    public function applyPatches(PatchManagerInterface $patchManager) {
         // get the unapplied patches
 
         $unappliedPatches = $patchManager->getUnappliedPatches();
