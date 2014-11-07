@@ -19,17 +19,15 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\Question;
 
 
-
-
-class CreateSchemaCommand extends CreateCommand {
+class CreateDataCommand extends CreateCommand {
 
     protected function configure() {
         parent::configure();
-        $this->setName("create:schema");
-        $this->setDescription("Creates a new schema patch file");
+        $this->setName("create:data");
+        $this->setDescription("Creates a new data patch file");
     }
 
     protected function execute(InputInterface $input, OutputInterface $output) {
-        $this->generatePatch("createSchemaPatchFile",$input,$output);
+        $this->generatePatch("createDataPatchFile",$input,$output);
     }
 }
