@@ -21,7 +21,7 @@ use Symfony\Component\Console\Question\Question;
 
 
 
-class CreateCommand extends Command {
+class CreateSchemaCommand extends Command {
 
     protected function configure() {
         $this->setName("create:schema");
