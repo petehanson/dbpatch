@@ -148,6 +148,12 @@ class PatchManager implements PatchManagerInterface {
         return $this->createPatchFile($path,$description,$extension,$timestamp);
     }
 
+    public function createScriptPatchFile($description,$extension = "php",$timestamp = null) {
+        $path = $this->config->getScriptPath();
+
+        return $this->createPatchFile($path,$description,$extension,$timestamp);
+    }
+
     protected function createPatchFile($path,$description,$extension,$timestamp) {
         $returnFileName = "";
 

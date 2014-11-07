@@ -163,6 +163,16 @@ class PatchManagerTest extends \PHPUnit_Framework_TestCase
 
         unlink($filename);
 
+
+        $description = "PHP Patch Test";
+        $timestamp = 1414625055;
+        $compareFilename = $this->config->getScriptPath() . DIRECTORY_SEPARATOR . "20141029_232415.php_patch_test.php";
+
+        $filename = $this->pm->createScriptPatchFile($description,"php",$timestamp);
+        $this->assertTrue(file_exists($filename));
+        $this->assertEquals($compareFilename,$filename);
+
+        unlink($filename);
     }
 
 }
