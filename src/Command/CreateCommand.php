@@ -16,6 +16,10 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\Question;
+
+
+
 
 class CreateCommand extends Command {
 
@@ -32,5 +36,25 @@ class CreateCommand extends Command {
     }
 
     protected function execute(InputInterface $input, OutputInterface $output) {
+
+        $helper = $this->getHelper('question');
+        $question = new Question('Please provide a description for the patch: ', '');
+        $description = $helper->ask($input, $output, $question);
+
+        $executableBasepath = getcwd();
+
+        $cm = new ConfigManager();
+        $config = $cm->determineConfig($input->getOption("config"),$executableBasepath);
+
+        $output->writeln("<info>Using config: " . $config->getConfigFilePath() . "</info>");
+
+        $db = new Database($config);
+
+        $patchManager = new PatchManager($config,$db);
+
+        $newPatchFile = $patchManager->createSchemaPatchFile($description);
+
+        $output->writeln("Created Patch File: " . $newPatchFile);
+
     }
 }

@@ -140,9 +140,26 @@ class PatchManagerTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testCreatePatch() {
+
+        $timestamp = 1414624456;
+
+        $compareFilename = "20141029_231416.a_test_description.sql";
+        $compareFilename = $this->config->getSchemaPath() . DIRECTORY_SEPARATOR . $compareFilename;
+
         $description = "A test description";
-        $filename = $this->pm->createSchemaPatchFile($description);
+        $filename = $this->pm->createSchemaPatchFile($description,"sql",$timestamp);
         $this->assertTrue(file_exists($filename));
+        $this->assertEquals($compareFilename,$filename);
+
+        unlink($filename);
+
+        $description = "Data Patch Test";
+        $timestamp = 1414625055;
+        $compareFilename = $this->config->getDataPath() . DIRECTORY_SEPARATOR . "20141029_232415.data_patch_test.sql";
+
+        $filename = $this->pm->createDataPatchFile($description,"sql",$timestamp);
+        $this->assertTrue(file_exists($filename));
+        $this->assertEquals($compareFilename,$filename);
 
         unlink($filename);
 

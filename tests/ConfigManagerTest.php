@@ -65,7 +65,7 @@ class ConfigManagerTest extends \PHPUnit_Framework_TestCase
 
         $folder = "test" . \BootstrapUtil::generateRandomString();
         $result = $this->configManager->createConfigFolders(\TestFiles::$baseDir,$folder);
-        $this->assertTrue($result);
+        $this->assertGreaterThanOrEqual(1,strlen($result));
 
         $path = \TestFiles::$baseDir . DIRECTORY_SEPARATOR . $folder;
 

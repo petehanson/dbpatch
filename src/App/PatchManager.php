@@ -136,13 +136,26 @@ class PatchManager implements PatchManagerInterface {
         return $patch;
     }
 
-    public function createSchemaPatchFile($description,$extension = "sql") {
-        $returnFileName = "";
-        $description = $this->normalizeDescription($description);
+    public function createDataPatchFile($description,$extension = "sql",$timestamp = null) {
+        $path = $this->config->getDataPath();
 
-        $returnFileName = $description . '.' . $extension;
+        return $this->createPatchFile($path,$description,$extension,$timestamp);
+    }
 
+    public function createSchemaPatchFile($description,$extension = "sql",$timestamp = null) {
         $path = $this->config->getSchemaPath();
+
+        return $this->createPatchFile($path,$description,$extension,$timestamp);
+    }
+
+    protected function createPatchFile($path,$description,$extension,$timestamp) {
+        $returnFileName = "";
+
+        $description = $this->normalizeDescription($description);
+        $dateTime = $this->normalizeTimestampPrefix($timestamp);
+
+        $returnFileName = $dateTime . '.' . $description . '.' . $extension;
+
 
         $fullPath = $path . DIRECTORY_SEPARATOR . $returnFileName;
         touch($fullPath);
@@ -150,8 +163,17 @@ class PatchManager implements PatchManagerInterface {
         return $fullPath;
     }
 
+    protected function normalizeTimestampPrefix($timestamp = null) {
+        if ($timestamp === null) {
+            $timestamp = time();
+        }
+
+        date_default_timezone_set($this->config->getStandardizedTimezone());
+        return date("Ymd_His",$timestamp);
+    }
+
     protected function normalizeDescription($description) {
-        return preg_replace("/[^\w]/","_",$description);
+        return preg_replace("/[^\w]/","_",strtolower($description));
     }
 }
 
