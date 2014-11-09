@@ -5,7 +5,8 @@ namespace uarsoftware\dbpatch\App;
 interface PatchInterface {
     public function __construct($patchName);
     public function getBaseName();
-    public function getPatchStatements();
+    public function getPatchName();
+    public function getPatchContents();
     public function isRealFile();
     public function hasBeenApplied();
     public function setAsAppliedPatch();
@@ -15,4 +16,5 @@ interface PatchInterface {
     public function isSuccessful();
     public function getErrorCode();
     public function getErrorMessage();
+    public function apply(DatabaseInterface $db);
 }

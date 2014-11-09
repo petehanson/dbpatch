@@ -12,6 +12,11 @@ class Patch implements PatchInterface{
     protected $errorMessage;
 
 
+    protected $isSQL = false;
+    protected $isPHP = false;
+
+    protected $patchApplier = null;
+
 
     public function __construct($patchName) {
         $this->patchName = $patchName;
@@ -20,6 +25,12 @@ class Patch implements PatchInterface{
         $this->patchSuccess = false;
         $this->errorCode = "";
         $this->errorMessage = "";
+
+        $this->determinePatchType();
+    }
+
+    public function getPatchName() {
+        return $this->patchName;
     }
 
     public function getBaseName() {
@@ -72,6 +83,17 @@ class Patch implements PatchInterface{
         return $this->errorMessage;
     }
 
+
+    public function getPatchContents() {
+        $fileContents = "";
+        if ($this->isRealFile()) {
+            $fileContents = file_get_contents($this->patchName);
+        }
+
+        return $fileContents;
+    }
+
+    /*
     public function getPatchStatements() {
         $statements = array();
 
@@ -142,6 +164,37 @@ class Patch implements PatchInterface{
     protected function replaceTokens($content,$tokens) {
         return str_replace(array_keys($tokens),array_values($tokens),$content);
     }
+    */
 
+    public function getPatchApplier() {
+        return $this->patchApplier;
+    }
 
+    protected function determinePatchType() {
+        $parts = pathinfo($this->patchName);
+
+        switch ($parts['extension']) {
+            case "sql":
+                $this->patchApplier = new PatchApplierSql();
+                $this->patchApplier->setStatementParser(new StatementParser());
+                $this->isSQL = true;
+                break;
+
+            case "php":
+                $this->patchApplier = new PatchApplierPhp();
+                $this->isPHP = true;
+                break;
+        }
+    }
+
+    public function apply(DatabaseInterface $db) {
+        $status = $this->patchApplier->apply($this,$db);
+
+        if ($status == true) {
+            $this->setSuccessful();
+        } else {
+            $this->setFailed($this->patchApplier->getErrorCode(),$this->patchApplier->getErrorMessage());
+            throw new \exception($this->getErrorCode() . ": " . $this->getErrorMessage());
+        }
+    }
 }

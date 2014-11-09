@@ -121,6 +121,7 @@ class PatchManager implements PatchManagerInterface {
 
     public function applyPatch(PatchInterface $patch) {
 
+        /*
         $sqlStatements = $patch->getPatchStatements();
 
         foreach ($sqlStatements as $sql) {
@@ -133,6 +134,10 @@ class PatchManager implements PatchManagerInterface {
         }
 
         $patch->setSuccessful();
+        return $patch;
+        */
+
+        $patch->apply($this->database);
         return $patch;
     }
 

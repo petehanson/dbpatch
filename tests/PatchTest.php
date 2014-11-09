@@ -6,11 +6,16 @@ namespace uarsoftware\dbpatch\App;
 
 use uarsoftware\dbpatch\App\Config;
 use uarsoftware\dbpatch\App\Patch;
+use uarsoftware\dbpatch\App\PatchApplierSql;
+use uarsoftware\dbpatch\App\PatchApplierPhp;
+use uarsoftware\dbpatch\App\PatchApplierAbstract;
+use uarsoftware\dbpatch\App\PatchApplierInterface;
 
 class PatchTest extends \PHPUnit_Framework_TestCase
 {
     protected $config;
     protected $files;
+    protected $db;
 
     public function setUp() {
         \TestFiles::setUpFiles();
@@ -19,9 +24,17 @@ class PatchTest extends \PHPUnit_Framework_TestCase
         $this->files[3] = $this->makeFile(\TestFiles::$schemaPath . DIRECTORY_SEPARATOR . "4test.sql",$this->content4());
         $this->files[4] = $this->makeFile(\TestFiles::$schemaPath . DIRECTORY_SEPARATOR . "5test.sql",$this->content5());
         $this->files[5] = $this->makeFile(\TestFiles::$schemaPath . DIRECTORY_SEPARATOR . "6test.sql",$this->content6());
+        $this->files[6] = $this->makeFile(\TestFiles::$schemaPath . DIRECTORY_SEPARATOR . "7test.php","");
+
+        $this->config = new Config("test","mysql","localhost","test","root","root");
+        $this->config->setBasePath(realpath("/tmp"));
+
+        $this->db = new \MockDatabase($this->config);
+
     }
 
     public function tearDown() {
+        unlink($this->files[6]);
         unlink($this->files[5]);
         unlink($this->files[4]);
         unlink($this->files[3]);
@@ -79,28 +92,36 @@ class PatchTest extends \PHPUnit_Framework_TestCase
     public function testPatchStatements() {
         // single statement
         $patch = new Patch($this->files[0]);
-        $statements = $patch->getPatchStatements();
-        $this->assertCount(1,$statements);
+        $pa = $patch->getPatchApplier();
+        $pa->apply($patch,$this->db);
+        $this->assertEquals(1,$pa->getStatementCount());
 
         // patch with three statements
         $patch = new Patch($this->files[3]);
-        $statements = $patch->getPatchStatements();
-        $this->assertCount(3,$statements);
+        $pa = $patch->getPatchApplier();
+        $pa->apply($patch,$this->db);
+        $this->assertEquals(3,$pa->getStatementCount());
 
         // patch with statements where we've put a ; in a string somewhere
         $patch = new Patch($this->files[4]);
-        $statements = $patch->getPatchStatements();
-        $this->assertCount(2,$statements);
-
-        $this->assertEquals("insert into test1 values ('foobar; today')",$statements[0]);
-        $this->assertEquals("insert into test1 values ('hello \'world','test test2','test test 3',\"test4\")",$statements[1]);
+        $pa = $patch->getPatchApplier();
+        $pa->apply($patch,$this->db);
+        $this->assertEquals(2,$pa->getStatementCount());
 
         // a more complex patch file, with a multi-line create table statement
         $patch = new Patch($this->files[5]);
-        $statements = $patch->getPatchStatements();
-        $this->assertCount(4,$statements);
+        $pa = $patch->getPatchApplier();
+        $pa->apply($patch,$this->db);
+        $this->assertEquals(4,$pa->getStatementCount());
+    }
 
-        // test that gets one statement, that isn't terminated by a ;
+    public function testPatchExtensionIdentification() {
+        $patch = new Patch($this->files[5]);
+        $this->assertInstanceOf('uarsoftware\dbpatch\App\PatchApplierSql',$patch->getPatchApplier());
+
+        $patch = new Patch($this->files[6]);
+        $this->assertInstanceOf('uarsoftware\dbpatch\App\PatchApplierPhp',$patch->getPatchApplier());
+
     }
 
     protected function makeFile($path,$content) {
