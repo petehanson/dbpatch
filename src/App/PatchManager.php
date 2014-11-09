@@ -156,10 +156,17 @@ class PatchManager implements PatchManagerInterface {
     public function createScriptPatchFile($description,$extension = "php",$timestamp = null) {
         $path = $this->config->getScriptPath();
 
-        return $this->createPatchFile($path,$description,$extension,$timestamp);
+        $initContent = <<<EOF
+<?php
+
+return true;
+EOF;
+
+
+        return $this->createPatchFile($path,$description,$extension,$timestamp,$initContent);
     }
 
-    protected function createPatchFile($path,$description,$extension,$timestamp) {
+    protected function createPatchFile($path,$description,$extension,$timestamp,$initContent = null) {
         $returnFileName = "";
 
         $description = $this->normalizeDescription($description);
@@ -170,6 +177,10 @@ class PatchManager implements PatchManagerInterface {
 
         $fullPath = $path . DIRECTORY_SEPARATOR . $returnFileName;
         touch($fullPath);
+
+        if ($initContent !== null) {
+            file_put_contents($fullPath,$initContent);
+        }
 
         return $fullPath;
     }

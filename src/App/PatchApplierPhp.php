@@ -10,12 +10,14 @@ class PatchApplierPhp extends PatchApplierAbstract {
 
         $this->statementCount = 1;
 
-        function localInclude($path) {
+        // this wraps the include call in a local function so that it doesn't have access to any of the other
+        // properties or variables
+        $localInclude = function ($path) {
             return include($path);
-        }
+        };
 
         try {
-            $result = localInclude($path);
+            $result = $localInclude($path);
 
 
             if ($result == true) {
@@ -23,14 +25,14 @@ class PatchApplierPhp extends PatchApplierAbstract {
             } else {
                 $this->status = false;
                 $this->errorCode = 1;
-                $this->errorMessage = "The script in " . $path . " failed";
+                $this->errorMessage = "The script in " . $path . " failed. Did you remember to \"return true;\"?";
             }
 
         } catch (Exception $e) {
 
             $this->status = false;
             $this->errorCode = $e->getCode();
-            $this->errorMessage = $e->getMessage();
+            $this->errorMessage = "The script in " . $path . " threw an exception. Message: " . $e->getMessage();
         }
 
         return $this->status;

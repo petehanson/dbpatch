@@ -24,7 +24,9 @@ class PatchTest extends \PHPUnit_Framework_TestCase
         $this->files[3] = $this->makeFile(\TestFiles::$schemaPath . DIRECTORY_SEPARATOR . "4test.sql",$this->content4());
         $this->files[4] = $this->makeFile(\TestFiles::$schemaPath . DIRECTORY_SEPARATOR . "5test.sql",$this->content5());
         $this->files[5] = $this->makeFile(\TestFiles::$schemaPath . DIRECTORY_SEPARATOR . "6test.sql",$this->content6());
-        $this->files[6] = $this->makeFile(\TestFiles::$schemaPath . DIRECTORY_SEPARATOR . "7test.php","");
+        $this->files[6] = $this->makeFile(\TestFiles::$schemaPath . DIRECTORY_SEPARATOR . "7test.php",$this->content7());
+        $this->files[7] = $this->makeFile(\TestFiles::$schemaPath . DIRECTORY_SEPARATOR . "8test.php",$this->content8());
+        $this->files[8] = $this->makeFile(\TestFiles::$schemaPath . DIRECTORY_SEPARATOR . "9test.php",$this->content9());
 
         $this->config = new Config("test","mysql","localhost","test","root","root");
         $this->config->setBasePath(realpath("/tmp"));
@@ -34,6 +36,8 @@ class PatchTest extends \PHPUnit_Framework_TestCase
     }
 
     public function tearDown() {
+        unlink($this->files[8]);
+        unlink($this->files[7]);
         unlink($this->files[6]);
         unlink($this->files[5]);
         unlink($this->files[4]);
@@ -115,6 +119,34 @@ class PatchTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(4,$pa->getStatementCount());
     }
 
+    public function testPhpScripts() {
+
+        // test a PHP script that returns true
+        $patch = new Patch($this->files[6]);
+        $pa = $patch->getPatchApplier();
+        $result = $pa->apply($patch,$this->db);
+        $this->assertTrue($result);
+
+        // test a PHP script that returns false
+        $patch = new Patch($this->files[7]);
+        $pa = $patch->getPatchApplier();
+        $result = $pa->apply($patch,$this->db);
+        $this->assertFalse($result);
+
+    }
+
+    public function testPhpScriptException() {
+        $this->setExpectedException('\exception');
+
+        // test exception capturing from the executed script
+        $patch = new Patch($this->files[8]);
+        $pa = $patch->getPatchApplier();
+        $result = $pa->apply($patch,$this->db);
+        $this->assertFalse($result);
+
+    }
+
+
     public function testPatchExtensionIdentification() {
         $patch = new Patch($this->files[5]);
         $this->assertInstanceOf('uarsoftware\dbpatch\App\PatchApplierSql',$patch->getPatchApplier());
@@ -161,6 +193,33 @@ create table test1(
 insert into test1 values ('foobar; today');
 insert into test1 values ('hello \'world','test test2','test test 3',"test4");
 select * from test1 where field1 like '%foo%';
+EOF;
+        return $content;
+    }
+
+    protected function content7() {
+        $content = <<<EOF
+<?php
+
+return true;
+EOF;
+        return $content;
+    }
+
+    protected function content8() {
+        $content = <<<EOF
+<?php
+
+return false;
+EOF;
+        return $content;
+    }
+
+    protected function content9() {
+        $content = <<<EOF
+<?php
+
+throw new exception("I failed");
 EOF;
         return $content;
     }
