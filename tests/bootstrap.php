@@ -129,6 +129,28 @@ class TestFiles {
 
     }
 
+    public static function setUpDotConfig() {
+        $path = self::$baseDir . DIRECTORY_SEPARATOR . "dotConfig";
+        if (file_exists($path)) {
+            unlink($path);
+        }
+        touch($path);
+
+        return $path;
+    }
+
+    public static function addLineDotConfig($line) {
+        $path = self::$baseDir . DIRECTORY_SEPARATOR . "dotConfig";
+        if (file_exists($path)) {
+            file_put_contents($path,trim($line) . "\n",FILE_APPEND);
+        }
+    }
+
+    public static function tearDownDotConfig() {
+        $path = self::$baseDir . DIRECTORY_SEPARATOR . "dotConfig";
+        unlink($path);
+    }
+
     public static function writeConfigFile($file) {
         $contents = '<?php
 

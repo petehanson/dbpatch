@@ -12,10 +12,53 @@ class ConfigManager {
 
     public function determineConfig($configOption,$dbPatchBasePath) {
 
+        // define the .configs config file that ConfigManager will use
+        $dotConfigPath = $dbPatchBasePath . DIRECTORY_SEPARATOR . ".configs";
+
+
+        // make the determination if we have a config option
         if ($configOption) {
-            $path = $this->configFullPath($configOption,$dbPatchBasePath);
+
+            $configLocations = new ConfigLocation($dotConfigPath);
+
+            $skipConfigFullPath = false;
+            if ($configLocations->doesFileExist()) {
+                // check to see if we have a config that is identified by the label passed in via --config
+                if ($configLocations->doesConfigLocationExist($configOption)) {
+                    $path = $configLocations->getConfigLocation($configOption);
+                    $skipConfigFullPath = true;
+                }
+            }
+
+
+
+            if ($skipConfigFullPath == false) {
+                // there isn't a .configs file, so we're going to use any parameter provided as a path to a config
+                $path = $this->configFullPath($configOption,$dbPatchBasePath);
+            }
+
         } else {
-            $path = $this->findConfigFile($dbPatchBasePath);
+            // we didn't get a config option, so we're either using the one and only line from .configs or looking in the folder
+            // for the first matching config folder.
+
+
+            $configLocations = new ConfigLocation($dotConfigPath);
+
+            $skipFineConfigFile = false;
+            if ($configLocations->doesFileExist()) {
+
+                // we only will use the values from .configs if there's only one matching file
+                if ($configLocations->configLocationCount() == 1) {
+                    $path = $configLocations->getFirstConfigLocation();
+                    $skipFineConfigFile = true;
+                }
+            }
+
+
+            if ($skipFineConfigFile == false) {
+                $path = $this->findConfigFile($dbPatchBasePath);
+            }
+
         }
 
 
