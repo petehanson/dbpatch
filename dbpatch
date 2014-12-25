@@ -1,0 +1,24 @@
+#!/usr/bin/env php
+<?php
+
+require_once("vendor/autoload.php");
+
+use uarsoftware\dbpatch\Command\CreateSchemaCommand;
+use uarsoftware\dbpatch\Command\CreateDataCommand;
+use uarsoftware\dbpatch\Command\CreateScriptCommand;
+use uarsoftware\dbpatch\Command\RecordCommand;
+use uarsoftware\dbpatch\Command\ViewCommand;
+use uarsoftware\dbpatch\Command\InitCommand;
+use uarsoftware\dbpatch\Command\PatchCommand;
+use Symfony\Component\Console\Application;
+
+$application = new Application();
+$application->add(new CreateSchemaCommand);
+$application->add(new CreateDataCommand);
+$application->add(new CreateScriptCommand);
+$application->add(new RecordCommand);
+$application->add(new ViewCommand);
+$application->add(new InitCommand);
+$application->add(new PatchCommand);
+$application->run();
+

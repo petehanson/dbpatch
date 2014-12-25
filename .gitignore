@@ -2,3 +2,5 @@ nbproject
 *_patchfile.sql
 *_trackingFile.xml
 .idea/
+vendor/
+.configs
