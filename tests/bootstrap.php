@@ -90,27 +90,9 @@ class TestFiles {
         $dataPath = self::$baseDir . DIRECTORY_SEPARATOR . 'sql' . DIRECTORY_SEPARATOR . 'data';
         $scriptPath = self::$baseDir . DIRECTORY_SEPARATOR . 'sql' . DIRECTORY_SEPARATOR . 'script';
 
-        /*
-        $file1 = $schemaPath . DIRECTORY_SEPARATOR . "1test.sql";
-        $file2 = $schemaPath . DIRECTORY_SEPARATOR . "2test.sql";
-        $file3 = $dataPath . DIRECTORY_SEPARATOR . "3test.sql";
-        $file4 = $dataPath . DIRECTORY_SEPARATOR . "20141009_123456_test4.sql";
-        $file5 = $dataPath . DIRECTORY_SEPARATOR . "20141008_114523_test5.sql";
-        $file6 = $dataPath . DIRECTORY_SEPARATOR . "20141009_140000_test6.sql";
-        */
-
         foreach (self::$files as $file) {
             unlink($file);
         }
-
-        /*
-        unlink($file6);
-        unlink($file5);
-        unlink($file4);
-        unlink($file3);
-        unlink($file2);
-        unlink($file1);
-        */
 
         rmdir($scriptPath);
         rmdir($dataPath);

@@ -83,19 +83,11 @@ class PatchManagerTest extends \PHPUnit_Framework_TestCase
         $correct_order[] = new Patch(\TestFiles::$files[5]);
         $correct_order[] = new Patch(\TestFiles::$files[1]);
 
-        //print_r($unappliedPatches);
-        //print_r($correct_order);
-
         $this->assertEquals($correct_order[0],$unappliedPatches[0]);
         $this->assertEquals($correct_order[1],$unappliedPatches[1]);
         $this->assertEquals($correct_order[2],$unappliedPatches[2]);
         $this->assertEquals($correct_order[3],$unappliedPatches[3]);
         $this->assertEquals($correct_order[4],$unappliedPatches[4]);
-
-
-
-
-
     }
 
     public function testCreatePatchList() {

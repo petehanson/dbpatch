@@ -30,8 +30,6 @@ class PatchEngineTest extends \PHPUnit_Framework_TestCase
     }
 
     public function tearDown() {
-        //$this->config = null;
-
         \TestFiles::tearDownFiles();
 
         $this->config = null;

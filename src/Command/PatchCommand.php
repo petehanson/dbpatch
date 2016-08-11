@@ -44,8 +44,6 @@ class PatchCommand extends Command {
 
         $executableBasepath = getcwd();
 
-        //$output->writeln("Executing patch");
-
         $cm = new ConfigManager();
         $config = $cm->determineConfig($input->getOption("config"),$executableBasepath);
 

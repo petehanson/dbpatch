@@ -38,10 +38,10 @@ class CreateCommand extends Command {
         $question = new Question('Please provide a description for the patch: ', '');
         $description = $helper->ask($input, $output, $question);
 
-        $executableBasepath = getcwd();
+        $executableBasePath = getcwd();
 
         $cm = new ConfigManager();
-        $config = $cm->determineConfig($input->getOption("config"),$executableBasepath);
+        $config = $cm->determineConfig($input->getOption("config"),$executableBasePath);
 
         $output->writeln("<info>Using config: " . $config->getConfigFilePath() . "</info>");
 

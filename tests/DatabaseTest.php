@@ -52,9 +52,6 @@ class DatabaseTest extends \PHPUnit_Framework_TestCase
         }
 
         exec($command,$output,$returnVar);
-        //echo "\n";
-        //echo $command . "\n";
-        //$returnVar = 0;
 
         if ($returnVar != 0) {
             throw new exception("command {$command} produced an error");

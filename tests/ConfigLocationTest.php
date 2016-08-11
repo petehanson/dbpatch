@@ -15,7 +15,6 @@ class ConfigLocationTest extends \PHPUnit_Framework_TestCase
 
     public function tearDown() {
         $this->configLocation = null;
-        //\TestFiles::tearDownDotConfig();
     }
 
     public function testInitialization() {

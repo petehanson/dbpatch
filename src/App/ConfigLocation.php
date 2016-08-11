@@ -1,7 +1,6 @@
 <?php
 
 namespace uarsoftware\dbpatch\App;
-use uarsoftware\dbpatch\Util\Util;
 
 class ConfigLocation {
 

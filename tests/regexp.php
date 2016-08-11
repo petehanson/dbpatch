@@ -1,8 +1,5 @@
 <?php
 
-//$pattern = "/'.*?(?<!\\\)'/";
-//$pattern = '/".*?(?<!\\\)"/';
-//$text = "insert into foo values ('adslk\'jfaslkjf','fkkk');";
 $text = 'insert into foo values ("adslk\"jfaslkjf","fkkk",\'foo\',\'bar\');';
 
 echo $text . "\n";
@@ -50,25 +47,5 @@ function parseStrings($content) {
 }
 
 function replaceTokens($content,$tokens) {
-
     return str_replace(array_keys($tokens),array_values($tokens),$content);
-
-    foreach ($tokens as $key=>$value) {
-        $content = str_replace($key,$value,$content);
-    }
-
-    return $content;
 }
-
-
-/*
-echo $text . "\n\n";
-var_dump(preg_match($pattern,$text,$matches));
-var_dump($matches);
-
-var_dump(preg_match("/q(?=u)/","queen"));
-var_dump(preg_match("/q(?=u)/","qeen"));
-
-var_dump(preg_match("/(?<=u)e/","queen"));
-var_dump(preg_match("/(?<=u)e/","qeen"));
-*/

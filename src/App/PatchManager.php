@@ -38,8 +38,6 @@ class PatchManager implements PatchManagerInterface {
         $this->listPatchesFromFilesystem();
 
         $this->databasePatches = $database->getAppliedPatches();
-        //$this->createPatches($patchList);
-
     }
 
     protected function listPatchesFromFilesystem() {
@@ -65,7 +63,6 @@ class PatchManager implements PatchManagerInterface {
         $this->filesystemScriptPatches = $processType($this->config->getScriptPath());
 
         $this->filesystemPatches = array_merge($this->filesystemSchemaPatches,$this->filesystemDataPatches,$this->filesystemScriptPatches);
-        //sort($this->filesystemPatches);
         usort($this->filesystemPatches,function($a,$b) {
             return strcmp($a->getBaseName(),$b->getBaseName());
         });
@@ -120,23 +117,6 @@ class PatchManager implements PatchManagerInterface {
     }
 
     public function applyPatch(PatchInterface $patch) {
-
-        /*
-        $sqlStatements = $patch->getPatchStatements();
-
-        foreach ($sqlStatements as $sql) {
-            $result = $this->database->executeQuery($sql);
-
-            if ($result->status == false) {
-                $patch->setFailed($result->errorCode,$result->errorMessage);
-                throw new \exception($patch->getErrorCode() . ": " . $patch->getErrorMessage() . ",  executed query: " . $sql);
-            }
-        }
-
-        $patch->setSuccessful();
-        return $patch;
-        */
-
         $patch->apply($this->database);
         return $patch;
     }
